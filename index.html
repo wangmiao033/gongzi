@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>公司工资管理表</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 16px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+        background: #f5f5f5;
+      }
+      .page {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: #fff;
+        border-radius: 8px;
+        padding: 16px 20px 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 20px;
+      }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+        align-items: center;
+      }
+      label {
+        font-size: 14px;
+      }
+      input,
+      select {
+        padding: 4px 6px;
+        font-size: 14px;
+      }
+      button {
+        padding: 4px 10px;
+        font-size: 14px;
+        border-radius: 4px;
+        border: 1px solid #1677ff;
+        background: #1677ff;
+        color: #fff;
+        cursor: pointer;
+      }
+      button.secondary {
+        border-color: #d9d9d9;
+        background: #fff;
+        color: #333;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      thead {
+        background: #fafafa;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 4px 6px;
+        text-align: center;
+        min-width: 70px;
+      }
+      th.sticky,
+      td.sticky {
+        position: sticky;
+        left: 0;
+        background: #fafafa;
+        z-index: 1;
+      }
+      td.sticky {
+        background: #fff;
+      }
+      tfoot td {
+        font-weight: bold;
+        background: #fafafa;
+      }
+      input.cell-input {
+        width: 100%;
+        border: none;
+        outline: none;
+        text-align: center;
+        font-size: 13px;
+      }
+      .hint {
+        font-size: 12px;
+        color: #888;
+        margin-top: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="header">
+        <h1>公司工资管理表（本机保存）</h1>
+        <div style="font-size: 12px; color: #888">
+          数据保存在本电脑浏览器（localStorage），仅此电脑可见
+        </div>
+      </div>
+      <div class="toolbar">
+        <label>
+          月份：
+          <input id="monthInput" type="month" />
+        </label>
+        <button id="loadMonthBtn" class="secondary">加载/切换月份</button>
+        <button id="copyPrevBtn" class="secondary">从上月复制</button>
+        <button id="addRowBtn">新增一行员工</button>
+        <button id="saveBtn">保存到本机</button>
+        <button id="exportBtn" class="secondary">导出为 CSV</button>
+      </div>
+      <div style="overflow: auto; max-height: 70vh">
+        <table id="payTable">
+          <thead>
+            <tr>
+              <th class="sticky">姓名</th>
+              <th>入职时间</th>
+              <th>工种/岗位</th>
+              <th>出勤天数</th>
+              <th>基本工资</th>
+              <th>实际工资</th>
+              <th>补贴</th>
+              <th>奖金</th>
+              <th>养老</th>
+              <th>医疗</th>
+              <th>失业</th>
+              <th>公积金</th>
+              <th>其他扣款</th>
+              <th>个税</th>
+              <th>实发</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+          <tfoot>
+            <tr>
+              <td class="sticky">合计</td>
+              <td></td>
+              <td></td>
+              <td id="sum_attendance"></td>
+              <td id="sum_base"></td>
+              <td id="sum_real"></td>
+              <td id="sum_allowance"></td>
+              <td id="sum_bonus"></td>
+              <td id="sum_pension"></td>
+              <td id="sum_medical"></td>
+              <td id="sum_unemp"></td>
+              <td id="sum_fund"></td>
+              <td id="sum_other"></td>
+              <td id="sum_tax"></td>
+              <td id="sum_net"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="hint">
+        提示：双击单元格即可输入数字或文字；点击“保存到本机”后，数据会按“月份”保存在当前电脑浏览器中。
+      </div>
+    </div>
+
+    <script>
+      const STORAGE_KEY = "localPayrollData";
+
+      function loadAllData() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          return raw ? JSON.parse(raw) : {};
+        } catch (e) {
+          console.error(e);
+          return {};
+        }
+      }
+
+      function saveAllData(all) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+      }
+
+      function getCurrentMonth() {
+        const v = document.getElementById("monthInput").value;
+        if (v) return v;
+        const now = new Date();
+        const m = String(now.getMonth() + 1).padStart(2, "0");
+        const def = now.getFullYear() + "-" + m;
+        document.getElementById("monthInput").value = def;
+        return def;
+      }
+
+      function emptyRow() {
+        return {
+          name: "",
+          hireDate: "",
+          role: "",
+          attendance: "",
+          base: "",
+          real: "",
+          allowance: "",
+          bonus: "",
+          pension: "",
+          medical: "",
+          unemp: "",
+          fund: "",
+          other: "",
+          tax: "",
+          net: "",
+        };
+      }
+
+      function renderTable(rows) {
+        const tbody = document.getElementById("tbody");
+        tbody.innerHTML = "";
+        rows.forEach((row, index) => {
+          const tr = document.createElement("tr");
+          const cols = [
+            "name",
+            "hireDate",
+            "role",
+            "attendance",
+            "base",
+            "real",
+            "allowance",
+            "bonus",
+            "pension",
+            "medical",
+            "unemp",
+            "fund",
+            "other",
+            "tax",
+            "net",
+          ];
+          cols.forEach((key, colIndex) => {
+            const td = document.createElement("td");
+            if (colIndex === 0) td.classList.add("sticky");
+            const input = document.createElement("input");
+            input.className = "cell-input";
+            input.value = row[key] ?? "";
+            input.dataset.index = index;
+            input.dataset.key = key;
+            input.addEventListener("input", () => {
+              rows[index][key] = input.value;
+              if (
+                [
+                  "attendance",
+                  "base",
+                  "real",
+                  "allowance",
+                  "bonus",
+                  "pension",
+                  "medical",
+                  "unemp",
+                  "fund",
+                  "other",
+                  "tax",
+                ].includes(key)
+              ) {
+                autoCalcNet(rows[index]);
+                renderTable(rows);
+              } else {
+                updateSummary(rows);
+              }
+            });
+            td.appendChild(input);
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+        updateSummary(rows);
+      }
+
+      function toNumber(v) {
+        const n = parseFloat(v);
+        return isNaN(n) ? 0 : n;
+      }
+
+      function autoCalcNet(row) {
+        const real = toNumber(row.real || row.base);
+        const allowance = toNumber(row.allowance);
+        const bonus = toNumber(row.bonus);
+        const pension = toNumber(row.pension);
+        const medical = toNumber(row.medical);
+        const unemp = toNumber(row.unemp);
+        const fund = toNumber(row.fund);
+        const other = toNumber(row.other);
+        const tax = toNumber(row.tax);
+        const gross = real + allowance + bonus;
+        const deduct = pension + medical + unemp + fund + other + tax;
+        const net = gross - deduct;
+        row.real = real ? String(real) : row.real;
+        row.net = net ? net.toFixed(2) : "";
+      }
+
+      function updateSummary(rows) {
+        const sumField = (field) =>
+          rows.reduce((acc, r) => acc + toNumber(r[field]), 0);
+        const set = (id, field) => {
+          document.getElementById(id).textContent = sumField(field).toFixed(2);
+        };
+        document.getElementById("sum_attendance").textContent = sumField(
+          "attendance"
+        ).toFixed(1);
+        set("sum_base", "base");
+        set("sum_real", "real");
+        set("sum_allowance", "allowance");
+        set("sum_bonus", "bonus");
+        set("sum_pension", "pension");
+        set("sum_medical", "medical");
+        set("sum_unemp", "unemp");
+        set("sum_fund", "fund");
+        set("sum_other", "other");
+        set("sum_tax", "tax");
+        set("sum_net", "net");
+      }
+
+      let currentRows = [];
+
+      function loadMonth() {
+        const month = getCurrentMonth();
+        const all = loadAllData();
+        const rows = all[month] && Array.isArray(all[month]) ? all[month] : [];
+        if (rows.length === 0) {
+          currentRows = [emptyRow(), emptyRow(), emptyRow(), emptyRow()];
+        } else {
+          currentRows = rows;
+        }
+        renderTable(currentRows);
+      }
+
+      document.getElementById("loadMonthBtn").onclick = loadMonth;
+
+      document.getElementById("addRowBtn").onclick = function () {
+        currentRows.push(emptyRow());
+        renderTable(currentRows);
+      };
+
+      document.getElementById("saveBtn").onclick = function () {
+        const month = getCurrentMonth();
+        const all = loadAllData();
+        all[month] = currentRows;
+        saveAllData(all);
+        alert("已保存到本机（月份：" + month + "）");
+      };
+
+      document.getElementById("copyPrevBtn").onclick = function () {
+        const month = getCurrentMonth();
+        const [y, m] = month.split("-");
+        const prevMonth = new Date(parseInt(y, 10), parseInt(m, 10) - 2, 1);
+        const pm =
+          prevMonth.getFullYear() +
+          "-" +
+          String(prevMonth.getMonth() + 1).padStart(2, "0");
+        const all = loadAllData();
+        if (!all[pm] || all[pm].length === 0) {
+          alert("上月（" + pm + "）没有数据");
+          return;
+        }
+        currentRows = JSON.parse(JSON.stringify(all[pm]));
+        renderTable(currentRows);
+        alert("已从 " + pm + " 复制到当前月份");
+      };
+
+      document.getElementById("exportBtn").onclick = function () {
+        const month = getCurrentMonth();
+        const header = [
+          "姓名",
+          "入职时间",
+          "工种/岗位",
+          "出勤天数",
+          "基本工资",
+          "实际工资",
+          "补贴",
+          "奖金",
+          "养老",
+          "医疗",
+          "失业",
+          "公积金",
+          "其他扣款",
+          "个税",
+          "实发",
+        ];
+        const lines = [
+          header.join(","),
+          ...currentRows.map((r) =>
+            [
+              r.name,
+              r.hireDate,
+              r.role,
+              r.attendance,
+              r.base,
+              r.real,
+              r.allowance,
+              r.bonus,
+              r.pension,
+              r.medical,
+              r.unemp,
+              r.fund,
+              r.other,
+              r.tax,
+              r.net,
+            ]
+              .map((v) => (v == null ? "" : String(v)))
+              .join(",")
+          ),
+        ];
+        const csv = "\uFEFF" + lines.join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "工资表-" + month + ".csv";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      };
+
+      (function init() {
+        const now = new Date();
+        const m = String(now.getMonth() + 1).padStart(2, "0");
+        document.getElementById("monthInput").value =
+          now.getFullYear() + "-" + m;
+        loadMonth();
+      })();
+    </script>
+  </body>
+</html>
