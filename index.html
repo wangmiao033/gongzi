@@ -10,61 +10,88 @@
       }
       body {
         margin: 0;
-        padding: 16px;
+        padding: 24px;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
           "Microsoft YaHei", sans-serif;
-        background: #f5f5f5;
+        background: radial-gradient(circle at top, #f0f4ff 0, #f7f8fa 40%, #f2f3f5 100%);
       }
       .page {
-        max-width: 1200px;
+        max-width: 1220px;
         margin: 0 auto;
-        background: #fff;
-        border-radius: 8px;
-        padding: 16px 20px 24px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 18px 22px 26px;
+        box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+        border: 1px solid #e5e7eb;
       }
       .header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 12px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #edf0f5;
       }
       h1 {
         margin: 0;
-        font-size: 20px;
+        font-size: 22px;
+        font-weight: 600;
+        color: #111827;
       }
       .toolbar {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
-        margin-bottom: 12px;
+        gap: 10px;
+        margin-bottom: 14px;
         align-items: center;
       }
       label {
         font-size: 14px;
+        color: #4b5563;
       }
       input,
       select {
         padding: 4px 6px;
         font-size: 14px;
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        outline: none;
+        min-width: 120px;
+      }
+      input:focus,
+      select:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.12);
       }
       button {
-        padding: 4px 10px;
+        padding: 5px 14px;
         font-size: 14px;
-        border-radius: 4px;
+        border-radius: 999px;
         border: 1px solid #1677ff;
         background: #1677ff;
         color: #fff;
         cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
+        transition: all 0.15s ease-out;
       }
       button.secondary {
         border-color: #d9d9d9;
-        background: #fff;
-        color: #333;
+        background: #f9fafb;
+        color: #374151;
+        box-shadow: none;
       }
       button:disabled {
         opacity: 0.6;
         cursor: not-allowed;
+        box-shadow: none;
+      }
+      button:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
+        filter: brightness(1.03);
       }
       table {
         width: 100%;
@@ -76,24 +103,30 @@
       }
       th,
       td {
-        border: 1px solid #ddd;
-        padding: 4px 6px;
+        border: 1px solid #e5e7eb;
+        padding: 6px 6px;
         text-align: center;
         min-width: 70px;
+      }
+      tbody tr:nth-child(odd) {
+        background-color: #fcfcff;
+      }
+      tbody tr:hover {
+        background-color: #eef2ff;
       }
       th.sticky,
       td.sticky {
         position: sticky;
         left: 0;
-        background: #fafafa;
+        background: #f9fafb;
         z-index: 1;
       }
       td.sticky {
-        background: #fff;
+        background: inherit;
       }
       tfoot td {
         font-weight: bold;
-        background: #fafafa;
+        background: #f3f4ff;
       }
       input.cell-input {
         width: 100%;
@@ -105,30 +138,33 @@
       .hint {
         font-size: 12px;
         color: #888;
-        margin-top: 6px;
+        margin-top: 8px;
       }
       .nav-tabs {
         display: flex;
         gap: 8px;
-        margin-bottom: 8px;
+        margin-bottom: 12px;
       }
       .nav-tab {
-        padding: 4px 10px;
+        padding: 6px 14px;
         font-size: 14px;
-        border-radius: 4px;
-        border: 1px solid #d9d9d9;
-        background: #fafafa;
+        border-radius: 999px;
+        border: 1px solid #e5e7eb;
+        background: #f9fafb;
         cursor: pointer;
+        color: #4b5563;
       }
       .nav-tab.active {
-        border-color: #1677ff;
-        background: #1677ff;
+        border-color: #2563eb;
+        background: linear-gradient(135deg, #2563eb, #4f46e5);
         color: #fff;
+        box-shadow: 0 4px 10px rgba(79, 70, 229, 0.35);
       }
       .sub-title {
-        margin: 8px 0;
+        margin: 10px 0;
         font-weight: 500;
-        font-size: 14px;
+        font-size: 15px;
+        color: #111827;
       }
     </style>
   </head>
@@ -220,6 +256,7 @@
                 <th class="sticky">姓名</th>
                 <th>入职时间</th>
                 <th>工种/岗位</th>
+                <th>基础工资</th>
                 <th>状态</th>
                 <th>操作</th>
               </tr>
@@ -408,7 +445,28 @@
         const all = loadAllData();
         const rows = all[month] && Array.isArray(all[month]) ? all[month] : [];
         if (rows.length === 0) {
-          currentRows = [emptyRow(), emptyRow(), emptyRow(), emptyRow()];
+          // 按员工档案生成本月工资行
+          if (employees && employees.length > 0) {
+            currentRows = employees.map((e) => ({
+              name: e.name || "",
+              hireDate: e.hireDate || "",
+              role: e.role || "",
+              attendance: "",
+              base: e.baseSalary || "",
+              real: e.baseSalary || "",
+              allowance: "",
+              bonus: "",
+              pension: "",
+              medical: "",
+              unemp: "",
+              fund: "",
+              other: "",
+              tax: "",
+              net: "",
+            }));
+          } else {
+            currentRows = [emptyRow(), emptyRow(), emptyRow(), emptyRow()];
+          }
         } else {
           currentRows = rows;
         }
@@ -524,6 +582,7 @@
           tr.appendChild(makeCell("name", true));
           tr.appendChild(makeCell("hireDate", false));
           tr.appendChild(makeCell("role", false));
+          tr.appendChild(makeCell("baseSalary", false));
           tr.appendChild(makeCell("status", false));
           const actionTd = document.createElement("td");
           const delBtn = document.createElement("button");
@@ -580,6 +639,7 @@
             name: "",
             hireDate: "",
             role: "",
+            baseSalary: "",
             status: "在职",
           });
           renderEmployees();
