@@ -10,61 +10,88 @@
       }
       body {
         margin: 0;
-        padding: 16px;
+        padding: 24px;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
           "Microsoft YaHei", sans-serif;
-        background: #f5f5f5;
+        background: radial-gradient(circle at top, #f0f4ff 0, #f7f8fa 40%, #f2f3f5 100%);
       }
       .page {
-        max-width: 1200px;
+        max-width: 1220px;
         margin: 0 auto;
-        background: #fff;
-        border-radius: 8px;
-        padding: 16px 20px 24px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 18px 22px 26px;
+        box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+        border: 1px solid #e5e7eb;
       }
       .header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 12px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #edf0f5;
       }
       h1 {
         margin: 0;
-        font-size: 20px;
+        font-size: 22px;
+        font-weight: 600;
+        color: #111827;
       }
       .toolbar {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
-        margin-bottom: 12px;
+        gap: 10px;
+        margin-bottom: 14px;
         align-items: center;
       }
       label {
         font-size: 14px;
+        color: #4b5563;
       }
       input,
       select {
         padding: 4px 6px;
         font-size: 14px;
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        outline: none;
+        min-width: 120px;
+      }
+      input:focus,
+      select:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.12);
       }
       button {
-        padding: 4px 10px;
+        padding: 5px 14px;
         font-size: 14px;
-        border-radius: 4px;
+        border-radius: 999px;
         border: 1px solid #1677ff;
         background: #1677ff;
         color: #fff;
         cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
+        transition: all 0.15s ease-out;
       }
       button.secondary {
         border-color: #d9d9d9;
-        background: #fff;
-        color: #333;
+        background: #f9fafb;
+        color: #374151;
+        box-shadow: none;
       }
       button:disabled {
         opacity: 0.6;
         cursor: not-allowed;
+        box-shadow: none;
+      }
+      button:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
+        filter: brightness(1.03);
       }
       table {
         width: 100%;
@@ -76,24 +103,30 @@
       }
       th,
       td {
-        border: 1px solid #ddd;
-        padding: 4px 6px;
+        border: 1px solid #e5e7eb;
+        padding: 6px 6px;
         text-align: center;
         min-width: 70px;
+      }
+      tbody tr:nth-child(odd) {
+        background-color: #fcfcff;
+      }
+      tbody tr:hover {
+        background-color: #eef2ff;
       }
       th.sticky,
       td.sticky {
         position: sticky;
         left: 0;
-        background: #fafafa;
+        background: #f9fafb;
         z-index: 1;
       }
       td.sticky {
-        background: #fff;
+        background: inherit;
       }
       tfoot td {
         font-weight: bold;
-        background: #fafafa;
+        background: #f3f4ff;
       }
       input.cell-input {
         width: 100%;
@@ -105,18 +138,51 @@
       .hint {
         font-size: 12px;
         color: #888;
-        margin-top: 6px;
+        margin-top: 8px;
+      }
+      .nav-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .nav-tab {
+        padding: 6px 14px;
+        font-size: 14px;
+        border-radius: 999px;
+        border: 1px solid #e5e7eb;
+        background: #f9fafb;
+        cursor: pointer;
+        color: #4b5563;
+      }
+      .nav-tab.active {
+        border-color: #2563eb;
+        background: linear-gradient(135deg, #2563eb, #4f46e5);
+        color: #fff;
+        box-shadow: 0 4px 10px rgba(79, 70, 229, 0.35);
+      }
+      .sub-title {
+        margin: 10px 0;
+        font-weight: 500;
+        font-size: 15px;
+        color: #111827;
       }
     </style>
   </head>
   <body>
     <div class="page">
       <div class="header">
-        <h1>公司工资管理表（本机保存）</h1>
+        <h1>公司工资管理（本机版）</h1>
         <div style="font-size: 12px; color: #888">
           数据保存在本电脑浏览器（localStorage），仅此电脑可见
         </div>
       </div>
+      <div class="nav-tabs">
+        <button id="tabPayroll" class="nav-tab active">工资表</button>
+        <button id="tabEmployees" class="nav-tab">员工管理</button>
+      </div>
+
+      <!-- 工资表页面 -->
+      <div id="pagePayroll">
       <div class="toolbar">
         <label>
           月份：
@@ -174,10 +240,39 @@
       <div class="hint">
         提示：双击单元格即可输入数字或文字；点击“保存到本机”后，数据会按“月份”保存在当前电脑浏览器中。
       </div>
+      </div>
+
+      <!-- 员工管理页面 -->
+      <div id="pageEmployees" style="display:none;">
+        <div class="sub-title">员工列表</div>
+        <div class="toolbar">
+          <button id="empAddBtn">新增员工</button>
+          <button id="empSaveBtn" class="secondary">保存到本机</button>
+        </div>
+        <div style="overflow:auto; max-height:70vh">
+          <table id="empTable">
+            <thead>
+              <tr>
+                <th class="sticky">姓名</th>
+                <th>入职时间</th>
+                <th>工种/岗位</th>
+                <th>基础工资</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="empTbody"></tbody>
+          </table>
+        </div>
+        <div class="hint">
+          员工数据同样保存在本机浏览器中，可配合工资表一起使用。
+        </div>
+      </div>
     </div>
 
     <script>
       const STORAGE_KEY = "localPayrollData";
+      const EMP_STORAGE_KEY = "localPayrollEmployees";
 
       function loadAllData() {
         try {
@@ -191,6 +286,20 @@
 
       function saveAllData(all) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+      }
+
+      function loadEmployees() {
+        try {
+          const raw = localStorage.getItem(EMP_STORAGE_KEY);
+          return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+          console.error(e);
+          return [];
+        }
+      }
+
+      function saveEmployees(list) {
+        localStorage.setItem(EMP_STORAGE_KEY, JSON.stringify(list));
       }
 
       function getCurrentMonth() {
@@ -329,13 +438,35 @@
       }
 
       let currentRows = [];
+      let employees = [];
 
       function loadMonth() {
         const month = getCurrentMonth();
         const all = loadAllData();
         const rows = all[month] && Array.isArray(all[month]) ? all[month] : [];
         if (rows.length === 0) {
-          currentRows = [emptyRow(), emptyRow(), emptyRow(), emptyRow()];
+          // 按员工档案生成本月工资行
+          if (employees && employees.length > 0) {
+            currentRows = employees.map((e) => ({
+              name: e.name || "",
+              hireDate: e.hireDate || "",
+              role: e.role || "",
+              attendance: "",
+              base: e.baseSalary || "",
+              real: e.baseSalary || "",
+              allowance: "",
+              bonus: "",
+              pension: "",
+              medical: "",
+              unemp: "",
+              fund: "",
+              other: "",
+              tax: "",
+              net: "",
+            }));
+          } else {
+            currentRows = [emptyRow(), emptyRow(), emptyRow(), emptyRow()];
+          }
         } else {
           currentRows = rows;
         }
@@ -430,12 +561,94 @@
         URL.revokeObjectURL(url);
       };
 
+      // 员工管理
+      function renderEmployees() {
+        const tbody = document.getElementById("empTbody");
+        tbody.innerHTML = "";
+        employees.forEach((e, index) => {
+          const tr = document.createElement("tr");
+          function makeCell(key, isSticky) {
+            const td = document.createElement("td");
+            if (isSticky) td.classList.add("sticky");
+            const input = document.createElement("input");
+            input.className = "cell-input";
+            input.value = e[key] ?? "";
+            input.addEventListener("input", () => {
+              employees[index][key] = input.value;
+            });
+            td.appendChild(input);
+            return td;
+          }
+          tr.appendChild(makeCell("name", true));
+          tr.appendChild(makeCell("hireDate", false));
+          tr.appendChild(makeCell("role", false));
+          tr.appendChild(makeCell("baseSalary", false));
+          tr.appendChild(makeCell("status", false));
+          const actionTd = document.createElement("td");
+          const delBtn = document.createElement("button");
+          delBtn.textContent = "删除";
+          delBtn.className = "secondary";
+          delBtn.onclick = () => {
+            if (confirm("确认删除该员工？")) {
+              employees.splice(index, 1);
+              renderEmployees();
+            }
+          };
+          actionTd.appendChild(delBtn);
+          tr.appendChild(actionTd);
+          tbody.appendChild(tr);
+        });
+      }
+
+      function switchPage(page) {
+        const p1 = document.getElementById("pagePayroll");
+        const p2 = document.getElementById("pageEmployees");
+        const t1 = document.getElementById("tabPayroll");
+        const t2 = document.getElementById("tabEmployees");
+        if (page === "payroll") {
+          p1.style.display = "";
+          p2.style.display = "none";
+          t1.classList.add("active");
+          t2.classList.remove("active");
+        } else {
+          p1.style.display = "none";
+          p2.style.display = "";
+          t1.classList.remove("active");
+          t2.classList.add("active");
+          renderEmployees();
+        }
+      }
+
       (function init() {
         const now = new Date();
         const m = String(now.getMonth() + 1).padStart(2, "0");
         document.getElementById("monthInput").value =
           now.getFullYear() + "-" + m;
+        employees = loadEmployees();
         loadMonth();
+
+        document.getElementById("tabPayroll").onclick = function () {
+          switchPage("payroll");
+        };
+        document.getElementById("tabEmployees").onclick = function () {
+          switchPage("employees");
+        };
+
+        document.getElementById("empAddBtn").onclick = function () {
+          employees.push({
+            name: "",
+            hireDate: "",
+            role: "",
+            baseSalary: "",
+            status: "在职",
+          });
+          renderEmployees();
+        };
+
+        document.getElementById("empSaveBtn").onclick = function () {
+          saveEmployees(employees);
+          alert("员工信息已保存到本机");
+        };
       })();
     </script>
   </body>
