@@ -107,16 +107,46 @@
         color: #888;
         margin-top: 6px;
       }
+      .nav-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .nav-tab {
+        padding: 4px 10px;
+        font-size: 14px;
+        border-radius: 4px;
+        border: 1px solid #d9d9d9;
+        background: #fafafa;
+        cursor: pointer;
+      }
+      .nav-tab.active {
+        border-color: #1677ff;
+        background: #1677ff;
+        color: #fff;
+      }
+      .sub-title {
+        margin: 8px 0;
+        font-weight: 500;
+        font-size: 14px;
+      }
     </style>
   </head>
   <body>
     <div class="page">
       <div class="header">
-        <h1>公司工资管理表（本机保存）</h1>
+        <h1>公司工资管理（本机版）</h1>
         <div style="font-size: 12px; color: #888">
           数据保存在本电脑浏览器（localStorage），仅此电脑可见
         </div>
       </div>
+      <div class="nav-tabs">
+        <button id="tabPayroll" class="nav-tab active">工资表</button>
+        <button id="tabEmployees" class="nav-tab">员工管理</button>
+      </div>
+
+      <!-- 工资表页面 -->
+      <div id="pagePayroll">
       <div class="toolbar">
         <label>
           月份：
@@ -174,10 +204,38 @@
       <div class="hint">
         提示：双击单元格即可输入数字或文字；点击“保存到本机”后，数据会按“月份”保存在当前电脑浏览器中。
       </div>
+      </div>
+
+      <!-- 员工管理页面 -->
+      <div id="pageEmployees" style="display:none;">
+        <div class="sub-title">员工列表</div>
+        <div class="toolbar">
+          <button id="empAddBtn">新增员工</button>
+          <button id="empSaveBtn" class="secondary">保存到本机</button>
+        </div>
+        <div style="overflow:auto; max-height:70vh">
+          <table id="empTable">
+            <thead>
+              <tr>
+                <th class="sticky">姓名</th>
+                <th>入职时间</th>
+                <th>工种/岗位</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="empTbody"></tbody>
+          </table>
+        </div>
+        <div class="hint">
+          员工数据同样保存在本机浏览器中，可配合工资表一起使用。
+        </div>
+      </div>
     </div>
 
     <script>
       const STORAGE_KEY = "localPayrollData";
+      const EMP_STORAGE_KEY = "localPayrollEmployees";
 
       function loadAllData() {
         try {
@@ -191,6 +249,20 @@
 
       function saveAllData(all) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+      }
+
+      function loadEmployees() {
+        try {
+          const raw = localStorage.getItem(EMP_STORAGE_KEY);
+          return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+          console.error(e);
+          return [];
+        }
+      }
+
+      function saveEmployees(list) {
+        localStorage.setItem(EMP_STORAGE_KEY, JSON.stringify(list));
       }
 
       function getCurrentMonth() {
@@ -329,6 +401,7 @@
       }
 
       let currentRows = [];
+      let employees = [];
 
       function loadMonth() {
         const month = getCurrentMonth();
@@ -430,12 +503,92 @@
         URL.revokeObjectURL(url);
       };
 
+      // 员工管理
+      function renderEmployees() {
+        const tbody = document.getElementById("empTbody");
+        tbody.innerHTML = "";
+        employees.forEach((e, index) => {
+          const tr = document.createElement("tr");
+          function makeCell(key, isSticky) {
+            const td = document.createElement("td");
+            if (isSticky) td.classList.add("sticky");
+            const input = document.createElement("input");
+            input.className = "cell-input";
+            input.value = e[key] ?? "";
+            input.addEventListener("input", () => {
+              employees[index][key] = input.value;
+            });
+            td.appendChild(input);
+            return td;
+          }
+          tr.appendChild(makeCell("name", true));
+          tr.appendChild(makeCell("hireDate", false));
+          tr.appendChild(makeCell("role", false));
+          tr.appendChild(makeCell("status", false));
+          const actionTd = document.createElement("td");
+          const delBtn = document.createElement("button");
+          delBtn.textContent = "删除";
+          delBtn.className = "secondary";
+          delBtn.onclick = () => {
+            if (confirm("确认删除该员工？")) {
+              employees.splice(index, 1);
+              renderEmployees();
+            }
+          };
+          actionTd.appendChild(delBtn);
+          tr.appendChild(actionTd);
+          tbody.appendChild(tr);
+        });
+      }
+
+      function switchPage(page) {
+        const p1 = document.getElementById("pagePayroll");
+        const p2 = document.getElementById("pageEmployees");
+        const t1 = document.getElementById("tabPayroll");
+        const t2 = document.getElementById("tabEmployees");
+        if (page === "payroll") {
+          p1.style.display = "";
+          p2.style.display = "none";
+          t1.classList.add("active");
+          t2.classList.remove("active");
+        } else {
+          p1.style.display = "none";
+          p2.style.display = "";
+          t1.classList.remove("active");
+          t2.classList.add("active");
+          renderEmployees();
+        }
+      }
+
       (function init() {
         const now = new Date();
         const m = String(now.getMonth() + 1).padStart(2, "0");
         document.getElementById("monthInput").value =
           now.getFullYear() + "-" + m;
+        employees = loadEmployees();
         loadMonth();
+
+        document.getElementById("tabPayroll").onclick = function () {
+          switchPage("payroll");
+        };
+        document.getElementById("tabEmployees").onclick = function () {
+          switchPage("employees");
+        };
+
+        document.getElementById("empAddBtn").onclick = function () {
+          employees.push({
+            name: "",
+            hireDate: "",
+            role: "",
+            status: "在职",
+          });
+          renderEmployees();
+        };
+
+        document.getElementById("empSaveBtn").onclick = function () {
+          saveEmployees(employees);
+          alert("员工信息已保存到本机");
+        };
       })();
     </script>
   </body>
