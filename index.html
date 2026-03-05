@@ -1,158 +1,442 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>云上征途 - 隐私政策</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>公司工资管理表</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-            line-height: 1.8;
-            color: #333;
-            background-color: #f5f5f5;
-            padding: 20px;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #1a1a1a;
-            margin-bottom: 30px;
-            font-size: 28px;
-            border-bottom: 3px solid #007AFF;
-            padding-bottom: 15px;
-        }
-        h2 {
-            color: #333;
-            margin-top: 30px;
-            margin-bottom: 15px;
-            font-size: 20px;
-        }
-        p {
-            margin-bottom: 15px;
-            text-align: justify;
-        }
-        ul {
-            margin-left: 20px;
-            margin-bottom: 15px;
-        }
-        li {
-            margin-bottom: 8px;
-        }
-        .last-updated {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 30px;
-            padding: 10px;
-            background: #f9f9f9;
-            border-left: 4px solid #007AFF;
-        }
-        .contact-info {
-            background: #f9f9f9;
-            padding: 20px;
-            border-radius: 5px;
-            margin-top: 30px;
-        }
-        @media (max-width: 600px) {
-            .container {
-                padding: 20px;
-            }
-            h1 {
-                font-size: 24px;
-            }
-        }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 16px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+        background: #f5f5f5;
+      }
+      .page {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: #fff;
+        border-radius: 8px;
+        padding: 16px 20px 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 20px;
+      }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+        align-items: center;
+      }
+      label {
+        font-size: 14px;
+      }
+      input,
+      select {
+        padding: 4px 6px;
+        font-size: 14px;
+      }
+      button {
+        padding: 4px 10px;
+        font-size: 14px;
+        border-radius: 4px;
+        border: 1px solid #1677ff;
+        background: #1677ff;
+        color: #fff;
+        cursor: pointer;
+      }
+      button.secondary {
+        border-color: #d9d9d9;
+        background: #fff;
+        color: #333;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      thead {
+        background: #fafafa;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 4px 6px;
+        text-align: center;
+        min-width: 70px;
+      }
+      th.sticky,
+      td.sticky {
+        position: sticky;
+        left: 0;
+        background: #fafafa;
+        z-index: 1;
+      }
+      td.sticky {
+        background: #fff;
+      }
+      tfoot td {
+        font-weight: bold;
+        background: #fafafa;
+      }
+      input.cell-input {
+        width: 100%;
+        border: none;
+        outline: none;
+        text-align: center;
+        font-size: 13px;
+      }
+      .hint {
+        font-size: 12px;
+        color: #888;
+        margin-top: 6px;
+      }
     </style>
-</head>
-<body>
-    <div class="container">
-        <h1>隐私政策</h1>
-        <div class="last-updated">
-            <strong>最后更新时间：</strong>2026年1月28日
+  </head>
+  <body>
+    <div class="page">
+      <div class="header">
+        <h1>公司工资管理表（本机保存）</h1>
+        <div style="font-size: 12px; color: #888">
+          数据保存在本电脑浏览器（localStorage），仅此电脑可见
         </div>
-
-        <p>欢迎使用"云上征途"（以下简称"本应用"）。我们非常重视您的隐私保护。本隐私政策说明了我们如何收集、使用、存储和保护您的个人信息。在使用本应用之前，请您仔细阅读本隐私政策。</p>
-
-        <h2>1. 信息收集</h2>
-        <p>我们可能收集以下类型的信息：</p>
-        <ul>
-            <li><strong>设备信息：</strong>包括设备型号、操作系统版本、唯一设备标识符等，用于提供更好的服务体验。</li>
-            <li><strong>使用信息：</strong>包括应用使用情况、功能使用频率等，用于改进应用功能和性能。</li>
-            <li><strong>位置信息：</strong>在您授权的情况下，我们可能收集您的位置信息，用于提供基于位置的服务。</li>
-            <li><strong>账户信息：</strong>如果您创建账户，我们可能收集您的用户名、邮箱地址等信息。</li>
-        </ul>
-
-        <h2>2. 信息使用</h2>
-        <p>我们使用收集的信息用于以下目的：</p>
-        <ul>
-            <li>提供、维护和改进我们的服务</li>
-            <li>个性化您的使用体验</li>
-            <li>发送重要通知和更新</li>
-            <li>进行数据分析以改进应用性能</li>
-            <li>保护用户和我们的合法权益</li>
-        </ul>
-
-        <h2>3. 信息共享</h2>
-        <p>我们承诺不会向第三方出售、交易或转让您的个人信息，除非：</p>
-        <ul>
-            <li>获得您的明确同意</li>
-            <li>法律法规要求或司法机关依法要求</li>
-            <li>为保护我们的权利、财产或安全</li>
-            <li>与我们的服务提供商共享（这些提供商已同意保护您的信息）</li>
-        </ul>
-
-        <h2>4. 数据安全</h2>
-        <p>我们采用行业标准的安全措施来保护您的个人信息，包括：</p>
-        <ul>
-            <li>数据加密传输和存储</li>
-            <li>访问控制和权限管理</li>
-            <li>定期安全审计和更新</li>
-        </ul>
-        <p>尽管我们采取了合理的安全措施，但请注意，没有任何互联网传输或电子存储方法是100%安全的。</p>
-
-        <h2>5. 您的权利</h2>
-        <p>根据适用的法律法规，您享有以下权利：</p>
-        <ul>
-            <li>访问您的个人信息</li>
-            <li>更正不准确的个人信息</li>
-            <li>删除您的个人信息</li>
-            <li>撤回您的同意</li>
-            <li>限制或反对我们处理您的个人信息</li>
-            <li>数据可携带权</li>
-        </ul>
-
-        <h2>6. Cookie和类似技术</h2>
-        <p>我们可能使用Cookie和类似技术来收集信息、改善用户体验和分析应用使用情况。您可以通过设备设置管理这些技术。</p>
-
-        <h2>7. 儿童隐私</h2>
-        <p>我们的服务不面向13岁以下的儿童。我们不会故意收集13岁以下儿童的个人信息。如果我们发现收集了此类信息，我们将立即删除。</p>
-
-        <h2>8. 第三方服务</h2>
-        <p>我们的应用可能包含第三方服务或链接。这些第三方服务有其自己的隐私政策，我们不对其隐私做法负责。我们建议您仔细阅读这些第三方的隐私政策。</p>
-
-        <h2>9. 隐私政策更新</h2>
-        <p>我们可能会不时更新本隐私政策。重大变更时，我们会在应用内或通过其他方式通知您。继续使用本应用即表示您接受更新后的隐私政策。</p>
-
-        <h2>10. 联系我们</h2>
-        <div class="contact-info">
-            <p>如果您对本隐私政策有任何疑问、意见或投诉，请通过以下方式联系我们：</p>
-            <p><strong>邮箱：</strong>pingce@dxyx6888.com</p>
-            <p><strong>地址：</strong>广东省广州市天河区南方证券大厦</p>
-            <p><strong>QQ：</strong>895528575</p>
-        </div>
-
-        <p style="margin-top: 30px; color: #666; font-size: 14px;">
-            本隐私政策的解释权归"云上征途"所有。
-        </p>
+      </div>
+      <div class="toolbar">
+        <label>
+          月份：
+          <input id="monthInput" type="month" />
+        </label>
+        <button id="loadMonthBtn" class="secondary">加载/切换月份</button>
+        <button id="copyPrevBtn" class="secondary">从上月复制</button>
+        <button id="addRowBtn">新增一行员工</button>
+        <button id="saveBtn">保存到本机</button>
+        <button id="exportBtn" class="secondary">导出为 CSV</button>
+      </div>
+      <div style="overflow: auto; max-height: 70vh">
+        <table id="payTable">
+          <thead>
+            <tr>
+              <th class="sticky">姓名</th>
+              <th>入职时间</th>
+              <th>工种/岗位</th>
+              <th>出勤天数</th>
+              <th>基本工资</th>
+              <th>实际工资</th>
+              <th>补贴</th>
+              <th>奖金</th>
+              <th>养老</th>
+              <th>医疗</th>
+              <th>失业</th>
+              <th>公积金</th>
+              <th>其他扣款</th>
+              <th>个税</th>
+              <th>实发</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+          <tfoot>
+            <tr>
+              <td class="sticky">合计</td>
+              <td></td>
+              <td></td>
+              <td id="sum_attendance"></td>
+              <td id="sum_base"></td>
+              <td id="sum_real"></td>
+              <td id="sum_allowance"></td>
+              <td id="sum_bonus"></td>
+              <td id="sum_pension"></td>
+              <td id="sum_medical"></td>
+              <td id="sum_unemp"></td>
+              <td id="sum_fund"></td>
+              <td id="sum_other"></td>
+              <td id="sum_tax"></td>
+              <td id="sum_net"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="hint">
+        提示：双击单元格即可输入数字或文字；点击“保存到本机”后，数据会按“月份”保存在当前电脑浏览器中。
+      </div>
     </div>
-</body>
+
+    <script>
+      const STORAGE_KEY = "localPayrollData";
+
+      function loadAllData() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          return raw ? JSON.parse(raw) : {};
+        } catch (e) {
+          console.error(e);
+          return {};
+        }
+      }
+
+      function saveAllData(all) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+      }
+
+      function getCurrentMonth() {
+        const v = document.getElementById("monthInput").value;
+        if (v) return v;
+        const now = new Date();
+        const m = String(now.getMonth() + 1).padStart(2, "0");
+        const def = now.getFullYear() + "-" + m;
+        document.getElementById("monthInput").value = def;
+        return def;
+      }
+
+      function emptyRow() {
+        return {
+          name: "",
+          hireDate: "",
+          role: "",
+          attendance: "",
+          base: "",
+          real: "",
+          allowance: "",
+          bonus: "",
+          pension: "",
+          medical: "",
+          unemp: "",
+          fund: "",
+          other: "",
+          tax: "",
+          net: "",
+        };
+      }
+
+      function renderTable(rows) {
+        const tbody = document.getElementById("tbody");
+        tbody.innerHTML = "";
+        rows.forEach((row, index) => {
+          const tr = document.createElement("tr");
+          const cols = [
+            "name",
+            "hireDate",
+            "role",
+            "attendance",
+            "base",
+            "real",
+            "allowance",
+            "bonus",
+            "pension",
+            "medical",
+            "unemp",
+            "fund",
+            "other",
+            "tax",
+            "net",
+          ];
+          cols.forEach((key, colIndex) => {
+            const td = document.createElement("td");
+            if (colIndex === 0) td.classList.add("sticky");
+            const input = document.createElement("input");
+            input.className = "cell-input";
+            input.value = row[key] ?? "";
+            input.dataset.index = index;
+            input.dataset.key = key;
+            input.addEventListener("input", () => {
+              rows[index][key] = input.value;
+              if (
+                [
+                  "attendance",
+                  "base",
+                  "real",
+                  "allowance",
+                  "bonus",
+                  "pension",
+                  "medical",
+                  "unemp",
+                  "fund",
+                  "other",
+                  "tax",
+                ].includes(key)
+              ) {
+                autoCalcNet(rows[index]);
+                renderTable(rows);
+              } else {
+                updateSummary(rows);
+              }
+            });
+            td.appendChild(input);
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+        updateSummary(rows);
+      }
+
+      function toNumber(v) {
+        const n = parseFloat(v);
+        return isNaN(n) ? 0 : n;
+      }
+
+      function autoCalcNet(row) {
+        const real = toNumber(row.real || row.base);
+        const allowance = toNumber(row.allowance);
+        const bonus = toNumber(row.bonus);
+        const pension = toNumber(row.pension);
+        const medical = toNumber(row.medical);
+        const unemp = toNumber(row.unemp);
+        const fund = toNumber(row.fund);
+        const other = toNumber(row.other);
+        const tax = toNumber(row.tax);
+        const gross = real + allowance + bonus;
+        const deduct = pension + medical + unemp + fund + other + tax;
+        const net = gross - deduct;
+        row.real = real ? String(real) : row.real;
+        row.net = net ? net.toFixed(2) : "";
+      }
+
+      function updateSummary(rows) {
+        const sumField = (field) =>
+          rows.reduce((acc, r) => acc + toNumber(r[field]), 0);
+        const set = (id, field) => {
+          document.getElementById(id).textContent = sumField(field).toFixed(2);
+        };
+        document.getElementById("sum_attendance").textContent = sumField(
+          "attendance"
+        ).toFixed(1);
+        set("sum_base", "base");
+        set("sum_real", "real");
+        set("sum_allowance", "allowance");
+        set("sum_bonus", "bonus");
+        set("sum_pension", "pension");
+        set("sum_medical", "medical");
+        set("sum_unemp", "unemp");
+        set("sum_fund", "fund");
+        set("sum_other", "other");
+        set("sum_tax", "tax");
+        set("sum_net", "net");
+      }
+
+      let currentRows = [];
+
+      function loadMonth() {
+        const month = getCurrentMonth();
+        const all = loadAllData();
+        const rows = all[month] && Array.isArray(all[month]) ? all[month] : [];
+        if (rows.length === 0) {
+          currentRows = [emptyRow(), emptyRow(), emptyRow(), emptyRow()];
+        } else {
+          currentRows = rows;
+        }
+        renderTable(currentRows);
+      }
+
+      document.getElementById("loadMonthBtn").onclick = loadMonth;
+
+      document.getElementById("addRowBtn").onclick = function () {
+        currentRows.push(emptyRow());
+        renderTable(currentRows);
+      };
+
+      document.getElementById("saveBtn").onclick = function () {
+        const month = getCurrentMonth();
+        const all = loadAllData();
+        all[month] = currentRows;
+        saveAllData(all);
+        alert("已保存到本机（月份：" + month + "）");
+      };
+
+      document.getElementById("copyPrevBtn").onclick = function () {
+        const month = getCurrentMonth();
+        const [y, m] = month.split("-");
+        const prevMonth = new Date(parseInt(y, 10), parseInt(m, 10) - 2, 1);
+        const pm =
+          prevMonth.getFullYear() +
+          "-" +
+          String(prevMonth.getMonth() + 1).padStart(2, "0");
+        const all = loadAllData();
+        if (!all[pm] || all[pm].length === 0) {
+          alert("上月（" + pm + "）没有数据");
+          return;
+        }
+        currentRows = JSON.parse(JSON.stringify(all[pm]));
+        renderTable(currentRows);
+        alert("已从 " + pm + " 复制到当前月份");
+      };
+
+      document.getElementById("exportBtn").onclick = function () {
+        const month = getCurrentMonth();
+        const header = [
+          "姓名",
+          "入职时间",
+          "工种/岗位",
+          "出勤天数",
+          "基本工资",
+          "实际工资",
+          "补贴",
+          "奖金",
+          "养老",
+          "医疗",
+          "失业",
+          "公积金",
+          "其他扣款",
+          "个税",
+          "实发",
+        ];
+        const lines = [
+          header.join(","),
+          ...currentRows.map((r) =>
+            [
+              r.name,
+              r.hireDate,
+              r.role,
+              r.attendance,
+              r.base,
+              r.real,
+              r.allowance,
+              r.bonus,
+              r.pension,
+              r.medical,
+              r.unemp,
+              r.fund,
+              r.other,
+              r.tax,
+              r.net,
+            ]
+              .map((v) => (v == null ? "" : String(v)))
+              .join(",")
+          ),
+        ];
+        const csv = "\uFEFF" + lines.join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "工资表-" + month + ".csv";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      };
+
+      (function init() {
+        const now = new Date();
+        const m = String(now.getMonth() + 1).padStart(2, "0");
+        document.getElementById("monthInput").value =
+          now.getFullYear() + "-" + m;
+        loadMonth();
+      })();
+    </script>
+  </body>
 </html>
