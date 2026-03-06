@@ -5,256 +5,300 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>公司工资管理表</title>
     <style>
-      * {
-        box-sizing: border-box;
-      }
+      * { box-sizing: border-box; }
       body {
         margin: 0;
-        padding: 24px;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
-          "Microsoft YaHei", sans-serif;
-        background: radial-gradient(circle at top, #f0f4ff 0, #f7f8fa 40%, #f2f3f5 100%);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: #f1f5f9;
+        color: #334155;
+        min-height: 100vh;
       }
-      .page {
-        max-width: 1220px;
-        margin: 0 auto;
-        background: #ffffff;
-        border-radius: 14px;
-        padding: 18px 22px 26px;
-        box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
-        border: 1px solid #e5e7eb;
-      }
-      .header {
+      .app {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #edf0f5;
+        min-height: 100vh;
       }
-      h1 {
-        margin: 0;
-        font-size: 22px;
+      .sidebar {
+        width: 200px;
+        background: #1e293b;
+        color: #e2e8f0;
+        padding: 20px 0;
+        flex-shrink: 0;
+      }
+      .sidebar-title {
+        font-size: 15px;
         font-weight: 600;
-        color: #111827;
+        padding: 0 20px 16px;
+        border-bottom: 1px solid #334155;
+        margin-bottom: 12px;
+      }
+      .nav-tab {
+        display: block;
+        width: 100%;
+        padding: 10px 20px;
+        border: none;
+        background: none;
+        color: #94a3b8;
+        font-size: 14px;
+        text-align: left;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s;
+      }
+      .nav-tab:hover { background: #334155; color: #e2e8f0; }
+      .nav-tab.active { background: #0f172a; color: #fff; font-weight: 500; }
+      .sidebar-footer {
+        position: absolute;
+        bottom: 16px;
+        left: 20px;
+        right: 20px;
+        font-size: 11px;
+        color: #64748b;
+        line-height: 1.4;
+      }
+      .sidebar { position: relative; }
+      .main {
+        flex: 1;
+        padding: 24px 32px 40px;
+        overflow: auto;
+      }
+      .card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        padding: 24px;
+        margin-bottom: 20px;
+      }
+      .card-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #0f172a;
+        margin: 0 0 20px 0;
       }
       .toolbar {
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
-        margin-bottom: 14px;
+        margin-bottom: 16px;
         align-items: center;
       }
-      label {
+      .toolbar label { font-size: 14px; color: #64748b; }
+      input, select {
+        padding: 8px 12px;
         font-size: 14px;
-        color: #4b5563;
-      }
-      input,
-      select {
-        padding: 4px 6px;
-        font-size: 14px;
-        border-radius: 6px;
-        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
         outline: none;
         min-width: 120px;
       }
-      input:focus,
-      select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.12);
+      input:focus, select:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
       }
       button {
-        padding: 5px 14px;
+        padding: 8px 16px;
         font-size: 14px;
-        border-radius: 999px;
-        border: 1px solid #1677ff;
-        background: #1677ff;
-        color: #fff;
+        border-radius: 8px;
+        border: none;
         cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
-        transition: all 0.15s ease-out;
+        transition: background 0.15s, transform 0.1s;
       }
+      button.primary {
+        background: #3b82f6;
+        color: #fff;
+      }
+      button.primary:hover:not(:disabled) { background: #2563eb; }
       button.secondary {
-        border-color: #d9d9d9;
-        background: #f9fafb;
-        color: #374151;
-        box-shadow: none;
+        background: #f1f5f9;
+        color: #475569;
       }
-      button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        box-shadow: none;
+      button.secondary:hover:not(:disabled) { background: #e2e8f0; }
+      button:disabled { opacity: 0.6; cursor: not-allowed; }
+      .table-wrap {
+        overflow: auto;
+        max-height: 60vh;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
       }
-      button:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
-        filter: brightness(1.03);
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 13px;
-      }
-      thead {
-        background: #fafafa;
-      }
-      th,
-      td {
-        border: 1px solid #e5e7eb;
-        padding: 6px 6px;
+      table { width: 100%; border-collapse: collapse; font-size: 13px; }
+      thead { background: #f8fafc; position: sticky; top: 0; z-index: 1; }
+      th {
+        padding: 10px 12px;
         text-align: center;
-        min-width: 70px;
+        font-weight: 600;
+        color: #475569;
+        border-bottom: 1px solid #e2e8f0;
+        white-space: nowrap;
       }
-      tbody tr:nth-child(odd) {
-        background-color: #fcfcff;
+      td {
+        padding: 8px 12px;
+        border-bottom: 1px solid #f1f5f9;
+        text-align: center;
       }
-      tbody tr:hover {
-        background-color: #eef2ff;
+      td:first-child, th:first-child { text-align: left; }
+      tbody tr:hover { background: #f8fafc; }
+      tbody tr:nth-child(even) { background: #fafbfc; }
+      tbody tr:nth-child(even):hover { background: #f1f5f9; }
+      tfoot td {
+        font-weight: 600;
+        background: #f1f5f9;
+        border-bottom: none;
+        padding: 10px 12px;
       }
-      th.sticky,
-      td.sticky {
+      th.sticky, td.sticky {
         position: sticky;
         left: 0;
-        background: #f9fafb;
-        z-index: 1;
-      }
-      td.sticky {
         background: inherit;
+        z-index: 2;
+        box-shadow: 1px 0 0 #e2e8f0;
       }
-      tfoot td {
-        font-weight: bold;
-        background: #f3f4ff;
-      }
+      thead th.sticky { background: #f8fafc; }
+      tfoot td.sticky { background: #f1f5f9; }
       input.cell-input {
         width: 100%;
+        min-width: 60px;
         border: none;
         outline: none;
-        text-align: center;
+        padding: 4px 0;
         font-size: 13px;
+        background: transparent;
       }
       .hint {
         font-size: 12px;
-        color: #888;
-        margin-top: 8px;
+        color: #94a3b8;
+        margin-top: 12px;
+        line-height: 1.5;
       }
-      .nav-tabs {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 12px;
-      }
-      .nav-tab {
-        padding: 6px 14px;
-        font-size: 14px;
-        border-radius: 999px;
-        border: 1px solid #e5e7eb;
-        background: #f9fafb;
-        cursor: pointer;
-        color: #4b5563;
-      }
-      .nav-tab.active {
-        border-color: #2563eb;
-        background: linear-gradient(135deg, #2563eb, #4f46e5);
+      #addRowBtn, #empAddBtn { background: #3b82f6; color: #fff; }
+      #saveBtn { background: #10b981; color: #fff; }
+      #saveBtn:hover:not(:disabled) { background: #059669; }
+      .toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #1e293b;
         color: #fff;
-        box-shadow: 0 4px 10px rgba(79, 70, 229, 0.35);
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        z-index: 9999;
+        opacity: 0;
+        transition: opacity 0.2s;
+        pointer-events: none;
       }
-      .sub-title {
-        margin: 10px 0;
-        font-weight: 500;
-        font-size: 15px;
-        color: #111827;
+      .toast.show { opacity: 1; }
+      .empty-state {
+        text-align: center;
+        padding: 32px 16px;
+        color: #94a3b8;
+        font-size: 14px;
+      }
+      .cell-readonly { color: #64748b; font-size: 13px; }
+      @media print {
+        .sidebar, .toolbar, .hint, .toast, button, #printBtn { display: none !important; }
+        .main { padding: 0; }
+        .card { box-shadow: none; }
+        body { background: #fff; }
       }
     </style>
   </head>
   <body>
-    <div class="page">
-      <div class="header">
-        <h1>公司工资管理（本机版）</h1>
-        <div style="font-size: 12px; color: #888">
-          数据保存在本电脑浏览器（localStorage），仅此电脑可见
-        </div>
-      </div>
-      <div class="nav-tabs">
+    <div id="toast" class="toast"></div>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="sidebar-title">工资管理</div>
         <button id="tabPayroll" class="nav-tab active">工资表</button>
         <button id="tabEmployees" class="nav-tab">员工管理</button>
-      </div>
-
+        <button id="tabBases" class="nav-tab">基数设置</button>
+        <button id="tabHistory" class="nav-tab">历史工资</button>
+        <button id="tabSummary" class="nav-tab">成本汇总</button>
+        <div class="sidebar-footer">数据保存在本机浏览器，仅此电脑可见</div>
+      </aside>
+      <main class="main">
       <!-- 工资表页面 -->
       <div id="pagePayroll">
-      <div class="toolbar">
-        <label>
-          月份：
-          <input id="monthInput" type="month" />
-        </label>
-        <button id="loadMonthBtn" class="secondary">加载/切换月份</button>
-        <button id="copyPrevBtn" class="secondary">从上月复制</button>
-        <button id="addRowBtn">新增一行员工</button>
-        <button id="saveBtn">保存到本机</button>
-        <button id="exportBtn" class="secondary">导出为 CSV</button>
-      </div>
-      <div style="overflow: auto; max-height: 70vh">
+        <div class="card">
+          <h2 class="card-title">工资表</h2>
+          <div class="toolbar">
+            <label>月份：<input id="monthInput" type="month" /></label>
+            <button id="btnThisMonth" class="secondary" type="button">本月</button>
+            <button id="btnPrevMonth" class="secondary" type="button">上月</button>
+            <button id="loadMonthBtn" class="secondary">加载月份</button>
+            <button id="copyPrevBtn" class="secondary">从上月复制</button>
+            <label style="margin-left:8px">应出勤(天)：<input id="expectedDaysInput" type="number" min="1" max="31" value="22" style="width:56px" /></label>
+            <span style="margin-left:8px;font-size:12px;color:#94a3b8">缴费基数在「基数设置」中录入</span>
+            <button id="addRowBtn" class="primary">新增一行</button>
+            <button id="saveBtn">保存到本机</button>
+            <button id="exportBtn" class="secondary">导出 CSV</button>
+            <button id="printBtn" class="secondary">打印</button>
+          </div>
+          <div class="table-wrap">
         <table id="payTable">
           <thead>
             <tr>
               <th class="sticky">姓名</th>
-              <th>入职时间</th>
-              <th>工种/岗位</th>
               <th>出勤天数</th>
               <th>基本工资</th>
               <th>实际工资</th>
               <th>补贴</th>
               <th>奖金</th>
+              <th>税前</th>
               <th>养老</th>
               <th>医疗</th>
               <th>失业</th>
               <th>公积金</th>
+              <th>缺勤扣款</th>
               <th>其他扣款</th>
               <th>个税</th>
+              <th>扣款小计</th>
               <th>实发</th>
+              <th>上月实发</th>
+              <th>操作</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
           <tfoot>
             <tr>
               <td class="sticky">合计</td>
-              <td></td>
-              <td></td>
               <td id="sum_attendance"></td>
               <td id="sum_base"></td>
               <td id="sum_real"></td>
               <td id="sum_allowance"></td>
               <td id="sum_bonus"></td>
+              <td id="sum_gross"></td>
               <td id="sum_pension"></td>
               <td id="sum_medical"></td>
               <td id="sum_unemp"></td>
               <td id="sum_fund"></td>
+              <td id="sum_leaveDeduct"></td>
               <td id="sum_other"></td>
               <td id="sum_tax"></td>
+              <td id="sum_deductTotal"></td>
               <td id="sum_net"></td>
+              <td id="sum_lastNet"></td>
+              <td></td>
             </tr>
           </tfoot>
         </table>
-      </div>
-      <div class="hint">
-        提示：双击单元格即可输入数字或文字；点击“保存到本机”后，数据会按“月份”保存在当前电脑浏览器中。
-      </div>
+          </div>
+          <div class="hint">「上月实发」为上一月该员工的实发金额，便于对比。社保基数在「基数设置」中录入；仅王淼缴纳公积金1200元。①实际工资=基本工资×出勤/应出勤 ②税前=实际+补贴+奖金 ③实发=税前−扣款小计。</div>
+        </div>
       </div>
 
       <!-- 员工管理页面 -->
       <div id="pageEmployees" style="display:none;">
-        <div class="sub-title">员工列表</div>
-        <div class="toolbar">
-          <button id="empAddBtn">新增员工</button>
-          <button id="empSaveBtn" class="secondary">保存到本机</button>
-        </div>
-        <div style="overflow:auto; max-height:70vh">
+        <div class="card">
+          <h2 class="card-title">员工档案</h2>
+          <div class="toolbar">
+            <button id="empAddBtn" class="primary">新增员工</button>
+            <button id="empSaveBtn" class="secondary">保存到本机</button>
+          </div>
+          <div class="table-wrap">
           <table id="empTable">
             <thead>
               <tr>
                 <th class="sticky">姓名</th>
                 <th>入职时间</th>
+                <th>工龄</th>
                 <th>工种/岗位</th>
                 <th>基础工资</th>
                 <th>状态</th>
@@ -263,16 +307,177 @@
             </thead>
             <tbody id="empTbody"></tbody>
           </table>
-        </div>
-        <div class="hint">
-          员工数据同样保存在本机浏览器中，可配合工资表一起使用。
+          </div>
+          <div class="hint">员工数据保存在本机浏览器，基础工资会同步到工资表。</div>
         </div>
       </div>
+
+      <!-- 基数设置页面 -->
+      <div id="pageBases" style="display:none;">
+        <div class="card">
+          <h2 class="card-title">社保 / 公积金缴费基数与比例</h2>
+          <p style="font-size:13px;color:#64748b;margin:0 0 16px 0">工资表将按此处录入的基数和比例计算养老、医疗、失业、公积金。参考：<a href="https://gz.bendibao.com/gzsi/2016713/si218925.shtml" target="_blank" rel="noopener">广州社保缴费基数及比例</a>（单位参保：养老下限5510/个人8%，医疗下限6236/个人2%，失业下限2500/个人0.2%）</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:20px">
+            <label style="display:flex;flex-direction:column;gap:4px">养老缴费基数 <input id="basePension" type="number" min="0" step="1" placeholder="5510" /></label>
+            <label style="display:flex;flex-direction:column;gap:4px">养老个人比例(%) <input id="ratePension" type="number" min="0" max="100" step="0.01" placeholder="8" /></label>
+            <label style="display:flex;flex-direction:column;gap:4px">医疗缴费基数 <input id="baseMedical" type="number" min="0" step="1" placeholder="6236" /></label>
+            <label style="display:flex;flex-direction:column;gap:4px">医疗个人比例(%) <input id="rateMedical" type="number" min="0" max="100" step="0.01" placeholder="2" /></label>
+            <label style="display:flex;flex-direction:column;gap:4px">失业缴费基数 <input id="baseUnemp" type="number" min="0" step="1" placeholder="2500" /></label>
+            <label style="display:flex;flex-direction:column;gap:4px">失业个人比例(%) <input id="rateUnemp" type="number" min="0" max="100" step="0.01" placeholder="0.2" /></label>
+            <label style="display:flex;flex-direction:column;gap:4px">公积金缴费基数 <input id="baseFund" type="number" min="0" step="1" placeholder="2500" /></label>
+            <label style="display:flex;flex-direction:column;gap:4px">公积金个人比例(%) <input id="rateFund" type="number" min="0" max="100" step="0.01" placeholder="5" /></label>
+          </div>
+          <div class="toolbar">
+            <button id="basesSaveBtn" class="primary">保存基数与比例</button>
+            <button id="basesResetBtn" class="secondary">恢复广州2025下限默认</button>
+          </div>
+          <div class="hint" style="margin-top:8px"><strong>请先点击「保存基数与比例」</strong>，保存后再打开工资表，表中的养老/医疗/失业金额会按新基数与比例自动更新。仅「王淼」缴纳公积金1200元，其他人公积金为0。</div>
+        </div>
+      </div>
+
+      <!-- 历史工资页面 -->
+      <div id="pageHistory" style="display:none;">
+        <div class="card">
+          <h2 class="card-title">历史工资</h2>
+          <p style="font-size:13px;color:#64748b;margin:0 0 12px 0">查看已保存的各月工资表，仅读不可编辑。</p>
+          <div class="toolbar">
+            <label>选择月份：<select id="historyMonthSelect"></select></label>
+            <span id="historyMonthHint" style="margin-left:12px;font-size:13px;color:#64748b"></span>
+            <button id="historyExportBtn" class="secondary">导出该月 CSV</button>
+          </div>
+          <div class="table-wrap">
+            <table id="historyTable">
+              <thead>
+                <tr>
+                  <th class="sticky">姓名</th>
+                  <th>出勤天数</th>
+                  <th>基本工资</th>
+                  <th>实际工资</th>
+                  <th>补贴</th>
+                  <th>奖金</th>
+                  <th>税前</th>
+                  <th>养老</th>
+                  <th>医疗</th>
+                  <th>失业</th>
+                  <th>公积金</th>
+                  <th>缺勤扣款</th>
+                  <th>其他扣款</th>
+                  <th>个税</th>
+                  <th>扣款小计</th>
+                  <th>实发</th>
+                </tr>
+              </thead>
+              <tbody id="historyTbody"></tbody>
+              <tfoot>
+                <tr>
+                  <td class="sticky">合计</td>
+                  <td id="hist_sum_attendance"></td>
+                  <td id="hist_sum_base"></td>
+                  <td id="hist_sum_real"></td>
+                  <td id="hist_sum_allowance"></td>
+                  <td id="hist_sum_bonus"></td>
+                  <td id="hist_sum_gross"></td>
+                  <td id="hist_sum_pension"></td>
+                  <td id="hist_sum_medical"></td>
+                  <td id="hist_sum_unemp"></td>
+                  <td id="hist_sum_fund"></td>
+                  <td id="hist_sum_leaveDeduct"></td>
+                  <td id="hist_sum_other"></td>
+                  <td id="hist_sum_tax"></td>
+                  <td id="hist_sum_deductTotal"></td>
+                  <td id="hist_sum_net"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <div class="hint">无记录时请先在「工资表」中保存对应月份数据。</div>
+        </div>
+      </div>
+
+      <!-- 成本汇总页面（日历式月度固定成本） -->
+      <div id="pageSummary" style="display:none;">
+        <div class="card">
+          <h2 class="card-title">成本汇总</h2>
+          <p style="font-size:13px;color:#64748b;margin:0 0 12px 0">按月汇总应发、社保、公积金、个税、实发等固定成本，便于核算与预算。</p>
+          <div class="toolbar">
+            <button id="summaryExportBtn" class="secondary">导出汇总 CSV</button>
+          </div>
+          <div class="table-wrap">
+            <table id="summaryTable">
+              <thead>
+                <tr>
+                  <th class="sticky">月份</th>
+                  <th>人数</th>
+                  <th>应发合计</th>
+                  <th>养老</th>
+                  <th>医疗</th>
+                  <th>失业</th>
+                  <th>公积金</th>
+                  <th>社保小计</th>
+                  <th>个税</th>
+                  <th>实发合计</th>
+                </tr>
+              </thead>
+              <tbody id="summaryTbody"></tbody>
+              <tfoot>
+                <tr>
+                  <td class="sticky">合计</td>
+                  <td id="summ_total_count"></td>
+                  <td id="summ_total_gross"></td>
+                  <td id="summ_total_pension"></td>
+                  <td id="summ_total_medical"></td>
+                  <td id="summ_total_unemp"></td>
+                  <td id="summ_total_fund"></td>
+                  <td id="summ_total_social"></td>
+                  <td id="summ_total_tax"></td>
+                  <td id="summ_total_net"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <div class="hint">社保小计 = 养老+医疗+失业。实发合计为当月实际发放总额。</div>
+        </div>
+      </div>
+      </main>
     </div>
 
     <script>
       const STORAGE_KEY = "localPayrollData";
       const EMP_STORAGE_KEY = "localPayrollEmployees";
+      // 个人缴费比例（广州等）
+      const SOCIAL_BASE_KEY = "payrollSocialBases";
+      const SOCIAL_RATES_KEY = "payrollSocialRates";
+      // 广州单位参保个人比例（%）参考 https://gz.bendibao.com/gzsi/2016713/si218925.shtml
+      const DEFAULT_SOCIAL_BASES = { pension: 5510, medical: 6236, unemp: 2500, fund: 2500 };
+      const DEFAULT_SOCIAL_RATES_PCT = { pension: 8, medical: 2, unemp: 0.2, fund: 5 };
+      function getSocialBases() {
+        try {
+          const raw = localStorage.getItem(SOCIAL_BASE_KEY);
+          if (raw) return { ...DEFAULT_SOCIAL_BASES, ...JSON.parse(raw) };
+        } catch (e) {}
+        return { ...DEFAULT_SOCIAL_BASES };
+      }
+      function getSocialRates() {
+        try {
+          const raw = localStorage.getItem(SOCIAL_RATES_KEY);
+          const pct = raw ? { ...DEFAULT_SOCIAL_RATES_PCT, ...JSON.parse(raw) } : { ...DEFAULT_SOCIAL_RATES_PCT };
+          return {
+            pension: (pct.pension || 0) / 100,
+            medical: (pct.medical || 0) / 100,
+            unemp: (pct.unemp || 0) / 100,
+            fund: (pct.fund || 0) / 100,
+          };
+        } catch (e) {}
+        return {
+          pension: DEFAULT_SOCIAL_RATES_PCT.pension / 100,
+          medical: DEFAULT_SOCIAL_RATES_PCT.medical / 100,
+          unemp: DEFAULT_SOCIAL_RATES_PCT.unemp / 100,
+          fund: DEFAULT_SOCIAL_RATES_PCT.fund / 100,
+        };
+      }
+      function getSocialBase(name) {
+        return getSocialBases()[name] || 0;
+      }
 
       function loadAllData() {
         try {
@@ -288,10 +493,24 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
       }
 
+      // 默认员工（首次使用无本地数据时自动写入）
+      const DEFAULT_EMPLOYEES = [
+        { name: "罗汉金", hireDate: "2023-05-15", role: "", baseSalary: "", status: "在职" },
+        { name: "吴伟滨", hireDate: "2024-06-17", role: "", baseSalary: "", status: "在职" },
+        { name: "龚辉", hireDate: "2021-05-14", role: "", baseSalary: "", status: "在职" },
+        { name: "王淼", hireDate: "2020-11-01", role: "", baseSalary: "", status: "在职" },
+        { name: "马纯敏", hireDate: "2023-12-01", role: "", baseSalary: "", status: "在职" },
+      ];
+
       function loadEmployees() {
         try {
           const raw = localStorage.getItem(EMP_STORAGE_KEY);
-          return raw ? JSON.parse(raw) : [];
+          const list = raw ? JSON.parse(raw) : [];
+          if (list.length === 0) {
+            saveEmployees(DEFAULT_EMPLOYEES);
+            return DEFAULT_EMPLOYEES;
+          }
+          return list;
         } catch (e) {
           console.error(e);
           return [];
@@ -311,6 +530,34 @@
         document.getElementById("monthInput").value = def;
         return def;
       }
+      // 根据当前月份得到上月 key，如 "2026-03" -> "2026-02"
+      function getPrevMonthKey(monthStr) {
+        const [y, m] = (monthStr || "").split("-");
+        if (!y || !m) return "";
+        const d = new Date(parseInt(y, 10), parseInt(m, 10) - 2, 1);
+        return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+      }
+      // 从某月工资表里按姓名取实发金额（历史工资）
+      function getLastMonthNetByName(monthKey, name) {
+        if (!monthKey || !name || !(name = String(name).trim())) return "";
+        const all = loadAllData();
+        const rows = all[monthKey];
+        if (!Array.isArray(rows)) return "";
+        const row = rows.find((r) => (r.name || "").trim() === name);
+        return row && row.net !== undefined && row.net !== null && String(row.net).trim() !== "" ? String(row.net) : "";
+      }
+
+      const EXPECTED_DAYS_KEY = "payrollExpectedDays";
+      function getExpectedDays() {
+        const el = document.getElementById("expectedDaysInput");
+        if (!el) return 22;
+        const n = parseInt(el.value, 10);
+        return isNaN(n) || n < 1 ? 22 : Math.min(31, n);
+      }
+      function setExpectedDays(v) {
+        const el = document.getElementById("expectedDaysInput");
+        if (el) el.value = v;
+      }
 
       function emptyRow() {
         return {
@@ -322,14 +569,372 @@
           real: "",
           allowance: "",
           bonus: "",
+          gross: "",
           pension: "",
           medical: "",
           unemp: "",
           fund: "",
+          leaveDeduct: "",
           other: "",
           tax: "",
+          deductTotal: "",
           net: "",
         };
+      }
+
+      // 2026年1月实际发放工资（广州熊动科技工资表录入）
+      const JAN2026_PAYROLL = [
+        { name: "龚辉", attendance: "", base: "6774.20", real: "6774.20", allowance: "", bonus: "", gross: "6774.20", pension: "440.80", medical: "124.68", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "570.48", net: "6203.72" },
+        { name: "罗汉金", attendance: "", base: "5411.30", real: "5411.30", allowance: "", bonus: "", gross: "5411.30", pension: "440.80", medical: "124.68", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "570.48", net: "4840.82" },
+        { name: "王淼", attendance: "", base: "15000.00", real: "15000.00", allowance: "", bonus: "", gross: "15000.00", pension: "440.80", medical: "124.68", unemp: "5.00", fund: "1200.00", leaveDeduct: "", other: "", tax: "96.88", deductTotal: "1867.36", net: "13132.64" },
+        { name: "吴伟滨", attendance: "", base: "5150.00", real: "5150.00", allowance: "", bonus: "", gross: "5150.00", pension: "440.80", medical: "124.68", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "570.48", net: "4579.52" },
+        { name: "马纯敏", attendance: "", base: "5806.50", real: "5806.50", allowance: "", bonus: "", gross: "5806.50", pension: "440.80", medical: "124.68", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "7.08", deductTotal: "577.56", net: "5228.94" },
+      ];
+
+      // 2024年5月实际发放工资（广州熊动科技工资表录入）
+      const MAY2024_PAYROLL = [
+        { name: "龚辉", attendance: "", base: "6774.19", real: "6774.19", allowance: "", bonus: "", gross: "6774.19", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "36.81", deductTotal: "584.05", net: "6190.14" },
+        { name: "梁友奎", attendance: "", base: "5100.00", real: "5100.00", allowance: "", bonus: "", gross: "5100.00", pension: "0", medical: "0", unemp: "0", fund: "0", leaveDeduct: "", other: "", tax: "3.24", deductTotal: "3.24", net: "5096.76" },
+        { name: "罗汉金", attendance: "", base: "5250.00", real: "5250.00", allowance: "", bonus: "", gross: "5250.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "165.37", deductTotal: "712.61", net: "4537.39" },
+        { name: "王淼", attendance: "", base: "15000.00", real: "15000.00", allowance: "", bonus: "", gross: "15000.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "1200.00", leaveDeduct: "", other: "", tax: "704.19", deductTotal: "2451.43", net: "12548.57" },
+        { name: "李季鸿", attendance: "", base: "2064.55", real: "2064.55", allowance: "", bonus: "", gross: "2064.55", pension: "0", medical: "0", unemp: "0", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "0.00", net: "2064.55" },
+        { name: "吴奕聪", attendance: "", base: "2255.48", real: "2255.48", allowance: "", bonus: "", gross: "2255.48", pension: "0", medical: "0", unemp: "0", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "0.00", net: "2255.48" },
+      ];
+
+      // 2024年4月实际发放工资（广州熊动科技工资表录入）
+      const APR2024_PAYROLL = [
+        { name: "龚辉", attendance: "", base: "6650.00", real: "6650.00", allowance: "", bonus: "", gross: "6650.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "138.08", deductTotal: "685.32", net: "5964.68" },
+        { name: "梁友奎", attendance: "", base: "5533.00", real: "5533.00", allowance: "", bonus: "", gross: "5533.00", pension: "0", medical: "0", unemp: "0", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "0.00", net: "5533.00" },
+        { name: "罗汉金", attendance: "", base: "10740.00", real: "10740.00", allowance: "", bonus: "", gross: "10740.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "26.50", deductTotal: "573.74", net: "10166.26" },
+        { name: "王淼", attendance: "", base: "15000.00", real: "15000.00", allowance: "", bonus: "", gross: "15000.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "1200.00", leaveDeduct: "", other: "", tax: "247.59", deductTotal: "1994.83", net: "13005.17" },
+        { name: "巫俞亭", attendance: "", base: "0", real: "0", allowance: "", bonus: "", gross: "0", pension: "0", medical: "0", unemp: "0", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "0.00", net: "0" },
+      ];
+
+      // 2024年6月实际发放工资（广州熊动科技工资表录入）
+      const JUN2024_PAYROLL = [
+        { name: "龚辉", attendance: "", base: "7250.00", real: "7250.00", allowance: "", bonus: "", gross: "7250.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "51.08", deductTotal: "598.32", net: "6651.68" },
+        { name: "罗汉金", attendance: "", base: "5250.00", real: "5250.00", allowance: "", bonus: "", gross: "5250.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "547.24", net: "4702.76" },
+        { name: "梁友奎", attendance: "", base: "5509.32", real: "5509.32", allowance: "", bonus: "", gross: "5509.32", pension: "0", medical: "0", unemp: "0", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "0.00", net: "5509.32" },
+        { name: "王淼", attendance: "", base: "15000.00", real: "15000.00", allowance: "", bonus: "", gross: "15000.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "1200.00", leaveDeduct: "", other: "", tax: "825.28", deductTotal: "2572.52", net: "12427.48" },
+        { name: "李季鸿", attendance: "", base: "4250.00", real: "4250.00", allowance: "", bonus: "", gross: "4250.00", pension: "0", medical: "0", unemp: "0", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "0.00", net: "4250.00" },
+        { name: "吴奕聪", attendance: "", base: "3360.00", real: "3360.00", allowance: "", bonus: "", gross: "3360.00", pension: "0", medical: "0", unemp: "0", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "0.00", net: "3360.00" },
+        { name: "吴伟滨", attendance: "", base: "4000.00", real: "4000.00", allowance: "", bonus: "", gross: "4000.00", pension: "0", medical: "0", unemp: "0", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "0.00", net: "4000.00" },
+      ];
+
+      // 2024年7月实际发放工资（广州熊动科技工资表录入）
+      const JUL2024_PAYROLL = [
+        { name: "龚辉", attendance: "", base: "7250.00", real: "7250.00", allowance: "", bonus: "", gross: "7250.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "51.09", deductTotal: "598.33", net: "6651.67" },
+        { name: "罗汉金", attendance: "", base: "5250.00", real: "5250.00", allowance: "", bonus: "", gross: "5250.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "547.24", net: "4702.76" },
+        { name: "王淼", attendance: "", base: "15000.00", real: "15000.00", allowance: "", bonus: "", gross: "15000.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "1200.00", leaveDeduct: "", other: "", tax: "825.27", deductTotal: "2572.51", net: "12427.49" },
+        { name: "李季鸿", attendance: "", base: "4250.00", real: "4250.00", allowance: "", bonus: "", gross: "4250.00", pension: "0", medical: "0", unemp: "0", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "0.00", net: "4250.00" },
+        { name: "吴伟滨", attendance: "", base: "3360.00", real: "3360.00", allowance: "", bonus: "", gross: "3360.00", pension: "0", medical: "0", unemp: "0", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "0.00", net: "3360.00" },
+      ];
+
+      // 2024年8月实际发放工资（广州熊动科技工资表录入）
+      const AUG2024_PAYROLL = [
+        { name: "龚辉", attendance: "", base: "7250.00", real: "7250.00", allowance: "", bonus: "", gross: "7250.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "51.08", deductTotal: "598.32", net: "6651.68" },
+        { name: "罗汉金", attendance: "", base: "6050.00", real: "6050.00", allowance: "", bonus: "", gross: "6050.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "547.24", net: "5502.76" },
+        { name: "王淼", attendance: "", base: "15000.00", real: "15000.00", allowance: "", bonus: "", gross: "15000.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "1200.00", leaveDeduct: "", other: "", tax: "825.28", deductTotal: "2572.52", net: "12427.48" },
+        { name: "李季鸿", attendance: "", base: "5250.00", real: "5250.00", allowance: "", bonus: "", gross: "5250.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "547.24", net: "4702.76" },
+        { name: "吴伟滨", attendance: "", base: "3480.00", real: "3480.00", allowance: "", bonus: "", gross: "3480.00", pension: "0", medical: "0", unemp: "0", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "0.00", net: "3480.00" },
+        { name: "黎英凤", attendance: "", base: "0", real: "0", allowance: "", bonus: "", gross: "0", pension: "0", medical: "0", unemp: "0", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "0.00", net: "0" },
+      ];
+
+      // 2024年9月实际发放工资（广州熊动科技工资表录入）
+      const SEP2024_PAYROLL = [
+        { name: "龚辉", attendance: "", base: "6766.00", real: "6766.00", allowance: "", bonus: "", gross: "6766.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "36.56", deductTotal: "583.80", net: "6182.20" },
+        { name: "罗汉金", attendance: "", base: "5250.00", real: "5250.00", allowance: "", bonus: "", gross: "5250.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "160.83", deductTotal: "708.07", net: "4541.93" },
+        { name: "王淼", attendance: "", base: "15000.00", real: "15000.00", allowance: "", bonus: "", gross: "15000.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "1200.00", leaveDeduct: "", other: "", tax: "825.27", deductTotal: "2572.51", net: "12427.49" },
+        { name: "李季鸿", attendance: "", base: "5000.00", real: "5000.00", allowance: "", bonus: "", gross: "5000.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "547.24", net: "4452.76" },
+        { name: "吴伟滨", attendance: "", base: "5150.00", real: "5150.00", allowance: "", bonus: "", gross: "5150.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "547.24", net: "4602.76" },
+      ];
+
+      // 2024年10月实际发放工资（广州熊动科技工资表录入）
+      const OCT2024_PAYROLL = [
+        { name: "龚辉", attendance: "", base: "7250.00", real: "7250.00", allowance: "", bonus: "", gross: "7250.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "51.08", deductTotal: "598.32", net: "6651.68" },
+        { name: "罗汉金", attendance: "", base: "5250.00", real: "5250.00", allowance: "", bonus: "", gross: "5250.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "547.24", net: "4702.76" },
+        { name: "王淼", attendance: "", base: "15000.00", real: "15000.00", allowance: "", bonus: "", gross: "15000.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "1200.00", leaveDeduct: "", other: "", tax: "825.28", deductTotal: "2572.52", net: "12427.48" },
+        { name: "李季鸿", attendance: "", base: "5250.00", real: "5250.00", allowance: "", bonus: "", gross: "5250.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "547.24", net: "4702.76" },
+        { name: "吴伟滨", attendance: "", base: "5150.00", real: "5150.00", allowance: "", bonus: "", gross: "5150.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "547.24", net: "4602.76" },
+      ];
+
+      // 2024年11月实际发放工资（广州熊动科技工资表录入）
+      const NOV2024_PAYROLL = [
+        { name: "龚辉", attendance: "", base: "7250.00", real: "7250.00", allowance: "", bonus: "", gross: "7250.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "51.09", deductTotal: "598.33", net: "6651.67" },
+        { name: "罗汉金", attendance: "", base: "4833.33", real: "4833.33", allowance: "", bonus: "", gross: "4833.33", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "547.24", net: "4286.09" },
+        { name: "王淼", attendance: "", base: "15000.00", real: "15000.00", allowance: "", bonus: "", gross: "15000.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "1200.00", leaveDeduct: "", other: "", tax: "825.28", deductTotal: "2572.52", net: "12427.48" },
+        { name: "李季鸿", attendance: "", base: "5250.00", real: "5250.00", allowance: "", bonus: "", gross: "5250.00", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "547.24", net: "4702.76" },
+        { name: "吴伟滨", attendance: "", base: "4736.67", real: "4736.67", allowance: "", bonus: "", gross: "4736.67", pension: "422.72", medical: "119.92", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "547.24", net: "4189.43" },
+      ];
+
+      // 2025年2月实际发放工资（广州熊动科技工资表录入）
+      const FEB2025_PAYROLL = [
+        { name: "龚辉", attendance: "", base: "7250.00", real: "7250.00", allowance: "", bonus: "", gross: "7250.00", pension: "526.40", medical: "124.72", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "47.83", deductTotal: "703.55", net: "6546.45" },
+        { name: "罗汉金", attendance: "", base: "5750.00", real: "5750.00", allowance: "", bonus: "", gross: "5750.00", pension: "526.40", medical: "124.72", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "655.72", net: "5094.28" },
+        { name: "王淼", attendance: "", base: "15000.00", real: "15000.00", allowance: "", bonus: "", gross: "15000.00", pension: "526.40", medical: "124.72", unemp: "4.60", fund: "1200.00", leaveDeduct: "", other: "", tax: "244.33", deductTotal: "2100.05", net: "12899.95" },
+        { name: "李季鸿", attendance: "", base: "3684.00", real: "3684.00", allowance: "", bonus: "", gross: "3684.00", pension: "69.12", medical: "0", unemp: "0", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "69.12", net: "3614.88" },
+        { name: "吴伟滨", attendance: "", base: "5150.00", real: "5150.00", allowance: "", bonus: "", gross: "5150.00", pension: "491.84", medical: "124.72", unemp: "4.60", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "621.16", net: "4528.84" },
+      ];
+
+      // 2025年3月实际发放工资（广州熊动科技工资表录入）
+      const MAR2025_PAYROLL = [
+        { name: "龚辉", attendance: "", base: "7250.00", real: "7250.00", allowance: "", bonus: "", gross: "7250.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "50.41", deductTotal: "620.13", net: "6629.87" },
+        { name: "罗汉金", attendance: "", base: "5750.00", real: "5750.00", allowance: "", bonus: "", gross: "5750.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "569.72", net: "5180.28" },
+        { name: "王淼", attendance: "", base: "15000.00", real: "15000.00", allowance: "", bonus: "", gross: "15000.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "1200.00", leaveDeduct: "", other: "", tax: "246.91", deductTotal: "2016.63", net: "12983.37" },
+        { name: "李季鸿", attendance: "", base: "5000.00", real: "5000.00", allowance: "", bonus: "", gross: "5000.00", pension: "0", medical: "0", unemp: "0", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "0.00", net: "5000.00" },
+        { name: "吴伟滨", attendance: "", base: "5150.00", real: "5150.00", allowance: "", bonus: "", gross: "5150.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "569.72", net: "4580.28" },
+      ];
+
+      // 2025年4月实际发放工资（广州熊动科技工资表录入）
+      const APR2025_PAYROLL = [
+        { name: "龚辉", attendance: "", base: "7250.00", real: "7250.00", allowance: "", bonus: "", gross: "7250.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "50.41", deductTotal: "620.13", net: "6629.87" },
+        { name: "罗汉金", attendance: "", base: "5500.00", real: "5500.00", allowance: "", bonus: "", gross: "5500.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "569.72", net: "4930.28" },
+        { name: "王淼", attendance: "", base: "15000.00", real: "15000.00", allowance: "", bonus: "", gross: "15000.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "1200.00", leaveDeduct: "", other: "", tax: "601.88", deductTotal: "2371.60", net: "12628.40" },
+        { name: "吴伟滨", attendance: "", base: "5150.00", real: "5150.00", allowance: "", bonus: "", gross: "5150.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "569.72", net: "4580.28" },
+      ];
+
+      // 2025年5月实际发放工资（广州熊动科技工资表录入）
+      const MAY2025_PAYROLL = [
+        { name: "龚辉", attendance: "", base: "7000.00", real: "7000.00", allowance: "", bonus: "", gross: "7000.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "42.91", deductTotal: "612.63", net: "6387.37" },
+        { name: "罗汉金", attendance: "", base: "5500.00", real: "5500.00", allowance: "", bonus: "", gross: "5500.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "569.72", net: "4930.28" },
+        { name: "王淼", attendance: "", base: "15000.00", real: "15000.00", allowance: "", bonus: "", gross: "15000.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "1200.00", leaveDeduct: "", other: "", tax: "823.03", deductTotal: "2592.75", net: "12407.25" },
+        { name: "吴伟滨", attendance: "", base: "5150.00", real: "5150.00", allowance: "", bonus: "", gross: "5150.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "569.72", net: "4580.28" },
+      ];
+
+      // 2025年6月实际发放工资（广州熊动科技工资表录入）
+      const JUN2025_PAYROLL = [
+        { name: "龚辉", attendance: "", base: "7000.00", real: "7000.00", allowance: "", bonus: "", gross: "7000.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "42.91", deductTotal: "612.63", net: "6387.37" },
+        { name: "罗汉金", attendance: "", base: "5950.00", real: "5950.00", allowance: "", bonus: "", gross: "5950.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "3.95", deductTotal: "573.67", net: "5376.33" },
+        { name: "王淼", attendance: "", base: "15000.00", real: "15000.00", allowance: "", bonus: "", gross: "15000.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "1200.00", leaveDeduct: "", other: "", tax: "823.03", deductTotal: "2592.75", net: "12407.25" },
+        { name: "吴伟滨", attendance: "", base: "4900.00", real: "4900.00", allowance: "", bonus: "", gross: "4900.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "569.72", net: "4330.28" },
+      ];
+
+      // 2025年7月实际发放工资（广州熊动科技工资表录入）
+      const JUL2025_PAYROLL = [
+        { name: "龚辉", attendance: "", base: "7000.00", real: "7000.00", allowance: "", bonus: "", gross: "7000.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "42.91", deductTotal: "612.63", net: "6387.37" },
+        { name: "罗汉金", attendance: "", base: "5750.00", real: "5750.00", allowance: "", bonus: "", gross: "5750.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "5.41", deductTotal: "575.13", net: "5174.87" },
+        { name: "王淼", attendance: "", base: "15000.00", real: "15000.00", allowance: "", bonus: "", gross: "15000.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "1200.00", leaveDeduct: "", other: "", tax: "823.02", deductTotal: "2592.74", net: "12407.26" },
+        { name: "吴伟滨", attendance: "", base: "4900.00", real: "4900.00", allowance: "", bonus: "", gross: "4900.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "569.72", net: "4330.28" },
+      ];
+
+      // 2025年8月实际发放工资（广州熊动科技工资表录入）
+      const AUG2025_PAYROLL = [
+        { name: "龚辉", attendance: "", base: "7250.00", real: "7250.00", allowance: "", bonus: "", gross: "7250.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "50.40", deductTotal: "620.12", net: "6629.88" },
+        { name: "罗汉金", attendance: "", base: "5750.00", real: "5750.00", allowance: "", bonus: "", gross: "5750.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "5.40", deductTotal: "575.12", net: "5174.88" },
+        { name: "王淼", attendance: "", base: "15000.00", real: "15000.00", allowance: "", bonus: "", gross: "15000.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "1200.00", leaveDeduct: "", other: "", tax: "823.03", deductTotal: "2592.75", net: "12407.25" },
+        { name: "吴伟滨", attendance: "", base: "5150.00", real: "5150.00", allowance: "", bonus: "", gross: "5150.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "569.72", net: "4580.28" },
+      ];
+
+      // 2025年9月实际发放工资（广州熊动科技工资表录入）
+      const SEP2025_PAYROLL = [
+        { name: "龚辉", attendance: "", base: "7250.00", real: "7250.00", allowance: "", bonus: "", gross: "7250.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "50.41", deductTotal: "620.13", net: "6629.87" },
+        { name: "罗汉金", attendance: "", base: "5500.00", real: "5500.00", allowance: "", bonus: "", gross: "5500.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "569.72", net: "4930.28" },
+        { name: "王淼", attendance: "", base: "15000.00", real: "15000.00", allowance: "", bonus: "", gross: "15000.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "1200.00", leaveDeduct: "", other: "", tax: "823.03", deductTotal: "2592.75", net: "12407.25" },
+        { name: "吴伟滨", attendance: "", base: "5150.00", real: "5150.00", allowance: "", bonus: "", gross: "5150.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "569.72", net: "4580.28" },
+      ];
+
+      // 2025年10月实际发放工资（广州熊动科技工资表录入）
+      const OCT2025_PAYROLL = [
+        { name: "龚辉", attendance: "", base: "7000.00", real: "7000.00", allowance: "", bonus: "", gross: "7000.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "42.91", deductTotal: "612.63", net: "6387.37" },
+        { name: "罗汉金", attendance: "", base: "5750.00", real: "5750.00", allowance: "", bonus: "", gross: "5750.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "3.32", deductTotal: "573.04", net: "5176.96" },
+        { name: "王淼", attendance: "", base: "15000.00", real: "15000.00", allowance: "", bonus: "", gross: "15000.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "1200.00", leaveDeduct: "", other: "", tax: "823.03", deductTotal: "2592.75", net: "12407.25" },
+        { name: "吴伟滨", attendance: "", base: "5150.00", real: "5150.00", allowance: "", bonus: "", gross: "5150.00", pension: "440.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "569.72", net: "4580.28" },
+      ];
+
+      // 2025年11月实际发放工资（广州熊动科技工资表录入）
+      const NOV2025_PAYROLL = [
+        { name: "龚辉", attendance: "", base: "7250.00", real: "7250.00", allowance: "", bonus: "", gross: "7250.00", pension: "440.80", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "50.38", deductTotal: "620.90", net: "6629.10" },
+        { name: "罗汉金", attendance: "", base: "5500.00", real: "5500.00", allowance: "", bonus: "", gross: "5500.00", pension: "440.80", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "570.52", net: "4929.48" },
+        { name: "王淼", attendance: "", base: "15000.00", real: "15000.00", allowance: "", bonus: "", gross: "15000.00", pension: "440.80", medical: "124.72", unemp: "5.00", fund: "1200.00", leaveDeduct: "", other: "", tax: "822.95", deductTotal: "2593.47", net: "12406.53" },
+        { name: "吴伟滨", attendance: "", base: "4900.00", real: "4900.00", allowance: "", bonus: "", gross: "4900.00", pension: "440.80", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "570.52", net: "4329.48" },
+      ];
+
+      // 2025年12月实际发放工资（广州熊动科技工资表录入）
+      const DEC2025_PAYROLL = [
+        { name: "龚辉", attendance: "", base: "6774.20", real: "6774.20", allowance: "", bonus: "", gross: "6774.20", pension: "444.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "36.01", deductTotal: "609.73", net: "6164.47" },
+        { name: "罗汉金", attendance: "", base: "5411.30", real: "5411.30", allowance: "", bonus: "", gross: "5411.30", pension: "444.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "573.72", net: "4837.58" },
+        { name: "王淼", attendance: "", base: "15000.00", real: "15000.00", allowance: "", bonus: "", gross: "15000.00", pension: "444.00", medical: "124.72", unemp: "5.00", fund: "1200.00", leaveDeduct: "", other: "", tax: "246.79", deductTotal: "2020.51", net: "12979.49" },
+        { name: "吴伟滨", attendance: "", base: "4900.00", real: "4900.00", allowance: "", bonus: "", gross: "4900.00", pension: "444.00", medical: "124.72", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "573.72", net: "4326.28" },
+      ];
+
+      function seedJan2026IfEmpty() {
+        const all = loadAllData();
+        const existing = all["2026-01"];
+        if (existing && Array.isArray(existing) && existing.length > 0) return;
+        all["2026-01"] = JSON.parse(JSON.stringify(JAN2026_PAYROLL));
+        saveAllData(all);
+        showToast("已录入 2026年1月 工资数据（5人）");
+      }
+      function seedDec2025IfEmpty() {
+        const all = loadAllData();
+        const existing = all["2025-12"];
+        if (existing && Array.isArray(existing) && existing.length > 0) return;
+        all["2025-12"] = JSON.parse(JSON.stringify(DEC2025_PAYROLL));
+        saveAllData(all);
+        showToast("已录入 2025年12月 工资数据（4人）");
+      }
+      function seedNov2025IfEmpty() {
+        const all = loadAllData();
+        const existing = all["2025-11"];
+        if (existing && Array.isArray(existing) && existing.length > 0) return;
+        all["2025-11"] = JSON.parse(JSON.stringify(NOV2025_PAYROLL));
+        saveAllData(all);
+        showToast("已录入 2025年11月 工资数据（4人）");
+      }
+      function seedOct2025IfEmpty() {
+        const all = loadAllData();
+        const existing = all["2025-10"];
+        if (existing && Array.isArray(existing) && existing.length > 0) return;
+        all["2025-10"] = JSON.parse(JSON.stringify(OCT2025_PAYROLL));
+        saveAllData(all);
+        showToast("已录入 2025年10月 工资数据（4人）");
+      }
+      function seedSep2025IfEmpty() {
+        const all = loadAllData();
+        const existing = all["2025-09"];
+        if (existing && Array.isArray(existing) && existing.length > 0) return;
+        all["2025-09"] = JSON.parse(JSON.stringify(SEP2025_PAYROLL));
+        saveAllData(all);
+        showToast("已录入 2025年9月 工资数据（4人）");
+      }
+      function seedAug2025IfEmpty() {
+        const all = loadAllData();
+        const existing = all["2025-08"];
+        if (existing && Array.isArray(existing) && existing.length > 0) return;
+        all["2025-08"] = JSON.parse(JSON.stringify(AUG2025_PAYROLL));
+        saveAllData(all);
+        showToast("已录入 2025年8月 工资数据（4人）");
+      }
+      function seedJul2025IfEmpty() {
+        const all = loadAllData();
+        const existing = all["2025-07"];
+        if (existing && Array.isArray(existing) && existing.length > 0) return;
+        all["2025-07"] = JSON.parse(JSON.stringify(JUL2025_PAYROLL));
+        saveAllData(all);
+        showToast("已录入 2025年7月 工资数据（4人）");
+      }
+      function seedJun2025IfEmpty() {
+        const all = loadAllData();
+        const existing = all["2025-06"];
+        if (existing && Array.isArray(existing) && existing.length > 0) return;
+        all["2025-06"] = JSON.parse(JSON.stringify(JUN2025_PAYROLL));
+        saveAllData(all);
+        showToast("已录入 2025年6月 工资数据（4人）");
+      }
+      function seedMay2025IfEmpty() {
+        const all = loadAllData();
+        const existing = all["2025-05"];
+        if (existing && Array.isArray(existing) && existing.length > 0) return;
+        all["2025-05"] = JSON.parse(JSON.stringify(MAY2025_PAYROLL));
+        saveAllData(all);
+        showToast("已录入 2025年5月 工资数据（4人）");
+      }
+      function seedApr2025IfEmpty() {
+        const all = loadAllData();
+        const existing = all["2025-04"];
+        if (existing && Array.isArray(existing) && existing.length > 0) return;
+        all["2025-04"] = JSON.parse(JSON.stringify(APR2025_PAYROLL));
+        saveAllData(all);
+        showToast("已录入 2025年4月 工资数据（4人）");
+      }
+      function seedMar2025IfEmpty() {
+        const all = loadAllData();
+        const existing = all["2025-03"];
+        if (existing && Array.isArray(existing) && existing.length > 0) return;
+        all["2025-03"] = JSON.parse(JSON.stringify(MAR2025_PAYROLL));
+        saveAllData(all);
+        showToast("已录入 2025年3月 工资数据（5人）");
+      }
+      function seedFeb2025IfEmpty() {
+        const all = loadAllData();
+        const existing = all["2025-02"];
+        if (existing && Array.isArray(existing) && existing.length > 0) return;
+        all["2025-02"] = JSON.parse(JSON.stringify(FEB2025_PAYROLL));
+        saveAllData(all);
+        showToast("已录入 2025年2月 工资数据（5人）");
+      }
+      function seedNov2024IfEmpty() {
+        const all = loadAllData();
+        const existing = all["2024-11"];
+        if (existing && Array.isArray(existing) && existing.length > 0) return;
+        all["2024-11"] = JSON.parse(JSON.stringify(NOV2024_PAYROLL));
+        saveAllData(all);
+        showToast("已录入 2024年11月 工资数据（5人）");
+      }
+      function seedOct2024IfEmpty() {
+        const all = loadAllData();
+        const existing = all["2024-10"];
+        if (existing && Array.isArray(existing) && existing.length > 0) return;
+        all["2024-10"] = JSON.parse(JSON.stringify(OCT2024_PAYROLL));
+        saveAllData(all);
+        showToast("已录入 2024年10月 工资数据（5人）");
+      }
+      function seedSep2024IfEmpty() {
+        const all = loadAllData();
+        const existing = all["2024-09"];
+        if (existing && Array.isArray(existing) && existing.length > 0) return;
+        all["2024-09"] = JSON.parse(JSON.stringify(SEP2024_PAYROLL));
+        saveAllData(all);
+        showToast("已录入 2024年9月 工资数据（5人）");
+      }
+      function seedAug2024IfEmpty() {
+        const all = loadAllData();
+        const existing = all["2024-08"];
+        if (existing && Array.isArray(existing) && existing.length > 0) return;
+        all["2024-08"] = JSON.parse(JSON.stringify(AUG2024_PAYROLL));
+        saveAllData(all);
+        showToast("已录入 2024年8月 工资数据（6人）");
+      }
+      function seedJul2024IfEmpty() {
+        const all = loadAllData();
+        const existing = all["2024-07"];
+        if (existing && Array.isArray(existing) && existing.length > 0) return;
+        all["2024-07"] = JSON.parse(JSON.stringify(JUL2024_PAYROLL));
+        saveAllData(all);
+        showToast("已录入 2024年7月 工资数据（5人）");
+      }
+      function seedJun2024IfEmpty() {
+        const all = loadAllData();
+        const existing = all["2024-06"];
+        if (existing && Array.isArray(existing) && existing.length > 0) return;
+        all["2024-06"] = JSON.parse(JSON.stringify(JUN2024_PAYROLL));
+        saveAllData(all);
+        showToast("已录入 2024年6月 工资数据（7人）");
+      }
+      function seedApr2024IfEmpty() {
+        const all = loadAllData();
+        const existing = all["2024-04"];
+        if (existing && Array.isArray(existing) && existing.length > 0) return;
+        all["2024-04"] = JSON.parse(JSON.stringify(APR2024_PAYROLL));
+        saveAllData(all);
+        showToast("已录入 2024年4月 工资数据（5人）");
+      }
+      function seedMay2024IfEmpty() {
+        const all = loadAllData();
+        const existing = all["2024-05"];
+        if (existing && Array.isArray(existing) && existing.length > 0) return;
+        all["2024-05"] = JSON.parse(JSON.stringify(MAY2024_PAYROLL));
+        saveAllData(all);
+        showToast("已录入 2024年5月 工资数据（6人）");
+      }
+
+      function showToast(msg) {
+        const el = document.getElementById("toast");
+        el.textContent = msg;
+        el.classList.add("show");
+        clearTimeout(window._toastTimer);
+        window._toastTimer = setTimeout(() => el.classList.remove("show"), 2500);
+      }
+
+      function calcYears(hireDate) {
+        if (!hireDate || !hireDate.trim()) return "";
+        const d = new Date(hireDate.trim());
+        if (isNaN(d.getTime())) return "";
+        const today = new Date();
+        let y = today.getFullYear() - d.getFullYear();
+        const m = today.getMonth() - d.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < d.getDate())) y--;
+        return y >= 0 ? y + "年" : "";
       }
 
       function renderTable(rows) {
@@ -339,55 +944,79 @@
           const tr = document.createElement("tr");
           const cols = [
             "name",
-            "hireDate",
-            "role",
             "attendance",
             "base",
             "real",
             "allowance",
             "bonus",
+            "gross",
             "pension",
             "medical",
             "unemp",
             "fund",
+            "leaveDeduct",
             "other",
             "tax",
+            "deductTotal",
             "net",
           ];
+          const readonlyCols = ["gross", "leaveDeduct", "tax", "deductTotal"];
+          const prevMonth = getPrevMonthKey(getCurrentMonth());
           cols.forEach((key, colIndex) => {
             const td = document.createElement("td");
             if (colIndex === 0) td.classList.add("sticky");
-            const input = document.createElement("input");
-            input.className = "cell-input";
-            input.value = row[key] ?? "";
-            input.dataset.index = index;
-            input.dataset.key = key;
-            input.addEventListener("input", () => {
-              rows[index][key] = input.value;
-              if (
-                [
-                  "attendance",
-                  "base",
-                  "real",
-                  "allowance",
-                  "bonus",
-                  "pension",
-                  "medical",
-                  "unemp",
-                  "fund",
-                  "other",
-                  "tax",
-                ].includes(key)
-              ) {
-                autoCalcNet(rows[index]);
-                renderTable(rows);
-              } else {
-                updateSummary(rows);
-              }
-            });
-            td.appendChild(input);
+            if (readonlyCols.includes(key)) {
+              td.textContent = row[key] ?? "";
+              td.classList.add("cell-readonly");
+            } else {
+              const input = document.createElement("input");
+              input.className = "cell-input";
+              input.value = row[key] ?? "";
+              input.dataset.index = index;
+              input.dataset.key = key;
+              input.addEventListener("input", () => {
+                rows[index][key] = input.value;
+                if (
+                  [
+                    "attendance",
+                    "base",
+                    "real",
+                    "allowance",
+                    "bonus",
+                    "pension",
+                    "medical",
+                    "unemp",
+                    "fund",
+                    "other",
+                    "tax",
+                  ].includes(key)
+                ) {
+                  autoCalcNet(rows[index]);
+                  renderTable(rows);
+                } else {
+                  updateSummary(rows);
+                }
+              });
+              td.appendChild(input);
+            }
             tr.appendChild(td);
           });
+          const lastNetTd = document.createElement("td");
+          lastNetTd.className = "cell-readonly";
+          lastNetTd.textContent = prevMonth ? getLastMonthNetByName(prevMonth, row.name) : "";
+          lastNetTd.title = prevMonth ? "上月（" + prevMonth + "）实发" : "";
+          tr.appendChild(lastNetTd);
+          const opTd = document.createElement("td");
+          const delBtn = document.createElement("button");
+          delBtn.textContent = "删除";
+          delBtn.className = "secondary";
+          delBtn.type = "button";
+          delBtn.onclick = () => {
+            rows.splice(index, 1);
+            renderTable(rows);
+          };
+          opTd.appendChild(delBtn);
+          tr.appendChild(opTd);
           tbody.appendChild(tr);
         });
         updateSummary(rows);
@@ -398,21 +1027,83 @@
         return isNaN(n) ? 0 : n;
       }
 
+      // 个税累进计算（应纳税所得额 = 税前 - 五险一金个人 - 5000，按月度税率表）
+      function calcIncomeTax(taxable) {
+        if (taxable <= 0) return 0;
+        const monthlyBrackets = [
+          [3000, 0.03, 0],
+          [12000, 0.10, 210],
+          [25000, 0.20, 1410],
+          [35000, 0.25, 2660],
+          [55000, 0.30, 4410],
+          [80000, 0.35, 7160],
+          [Infinity, 0.45, 15160],
+        ];
+        for (let i = 0; i < monthlyBrackets.length; i++) {
+          const [limit, rate, deduct] = monthlyBrackets[i];
+          if (taxable <= limit) return Math.round((taxable * rate - deduct) * 100) / 100;
+        }
+        return 0;
+      }
+
       function autoCalcNet(row) {
-        const real = toNumber(row.real || row.base);
+        const expected = getExpectedDays();
+        const attendanceRaw = row.attendance;
+        const attendanceFilled = attendanceRaw !== undefined && attendanceRaw !== null && String(attendanceRaw).trim() !== "";
+        const attendance = toNumber(row.attendance);
+        const base = toNumber(row.base);
+        const baseOrReal = toNumber(row.base || row.real);
+
+        // ① 实际工资 = 基本工资 × (出勤/应出勤)；未填出勤时按全额基本工资
+        let real = baseOrReal;
+        if (base > 0 && expected > 0 && attendanceFilled) {
+          real = base * (attendance / expected);
+          row.real = real.toFixed(2);
+        } else if (base > 0) {
+          real = baseOrReal;
+          if (!attendanceFilled) row.real = row.real || row.base || "";
+        }
+
         const allowance = toNumber(row.allowance);
         const bonus = toNumber(row.bonus);
+
+        // ② 缺勤扣款 = 基本工资 × (应出勤 - 出勤) / 应出勤（仅当已填出勤且出勤<应出勤时）
+        let leaveDeduct = 0;
+        if (attendanceFilled && expected > 0 && base > 0 && attendance < expected) {
+          leaveDeduct = (base * (expected - attendance)) / expected;
+        }
+        row.leaveDeduct = leaveDeduct > 0 ? leaveDeduct.toFixed(2) : "";
+
+        // ③ 税前 = 实际工资 + 补贴 + 奖金
+        const gross = real + allowance + bonus;
+        row.gross = gross > 0 ? gross.toFixed(2) : "";
+
+        // ④ 五险一金：养老/医疗/失业始终按「基数设置」的基数×比例重算；公积金仅王淼 1200，其余 0
+        const bases = getSocialBases();
+        const rates = getSocialRates();
+        if (bases.pension > 0) row.pension = (bases.pension * rates.pension).toFixed(2);
+        if (bases.medical > 0) row.medical = (bases.medical * rates.medical).toFixed(2);
+        if (bases.unemp > 0) row.unemp = (bases.unemp * rates.unemp).toFixed(2);
+        if ((row.name || "").trim() === "王淼") row.fund = "1200";
+        else row.fund = "0";
         const pension = toNumber(row.pension);
         const medical = toNumber(row.medical);
         const unemp = toNumber(row.unemp);
         const fund = toNumber(row.fund);
         const other = toNumber(row.other);
-        const tax = toNumber(row.tax);
-        const gross = real + allowance + bonus;
-        const deduct = pension + medical + unemp + fund + other + tax;
+
+        // ⑤ 应纳税所得额 = 税前 - 五险一金个人 - 起征点5000；个税累进计算
+        const taxable = gross - pension - medical - unemp - fund - 5000;
+        const tax = calcIncomeTax(taxable);
+        row.tax = tax > 0 ? tax.toFixed(2) : "";
+
+        // ⑥ 扣款小计 = 养老+医疗+失业+公积金+缺勤扣款+其他扣款+个税
+        const deduct = pension + medical + unemp + fund + leaveDeduct + other + tax;
+        row.deductTotal = deduct > 0 ? deduct.toFixed(2) : "";
+
+        // ⑦ 实发 = 税前 - 扣款小计
         const net = gross - deduct;
-        row.real = real ? String(real) : row.real;
-        row.net = net ? net.toFixed(2) : "";
+        row.net = net.toFixed(2);
       }
 
       function updateSummary(rows) {
@@ -428,26 +1119,52 @@
         set("sum_real", "real");
         set("sum_allowance", "allowance");
         set("sum_bonus", "bonus");
+        set("sum_gross", "gross");
         set("sum_pension", "pension");
         set("sum_medical", "medical");
         set("sum_unemp", "unemp");
         set("sum_fund", "fund");
+        set("sum_leaveDeduct", "leaveDeduct");
         set("sum_other", "other");
         set("sum_tax", "tax");
+        set("sum_deductTotal", "deductTotal");
         set("sum_net", "net");
+        const prevMonth = getPrevMonthKey(getCurrentMonth());
+        let lastNetSum = 0;
+        if (prevMonth) rows.forEach((r) => { const v = getLastMonthNetByName(prevMonth, r.name); if (v) lastNetSum += toNumber(v); });
+        const sumLastEl = document.getElementById("sum_lastNet");
+        if (sumLastEl) sumLastEl.textContent = prevMonth && lastNetSum > 0 ? lastNetSum.toFixed(2) : "";
       }
 
       let currentRows = [];
       let employees = [];
+
+      // 用员工档案里的基础工资，同步到工资表对应行（按姓名匹配）
+      function syncBaseFromEmployees() {
+        if (!employees || employees.length === 0) return;
+        const byName = {};
+        employees.forEach((e) => {
+          if (e.name && (e.baseSalary || e.baseSalary === 0)) byName[e.name.trim()] = String(e.baseSalary);
+        });
+        currentRows.forEach((row) => {
+          const name = (row.name || "").trim();
+          if (name && byName[name] !== undefined) {
+            row.base = byName[name];
+            row.real = byName[name];
+          }
+        });
+      }
 
       function loadMonth() {
         const month = getCurrentMonth();
         const all = loadAllData();
         const rows = all[month] && Array.isArray(all[month]) ? all[month] : [];
         if (rows.length === 0) {
-          // 按员工档案生成本月工资行
-          if (employees && employees.length > 0) {
-            currentRows = employees.map((e) => ({
+          const activeEmployees = (employees || []).filter(
+            (e) => (e.status || "在职").trim() !== "离职"
+          );
+          if (activeEmployees.length > 0) {
+            currentRows = activeEmployees.map((e) => ({
               name: e.name || "",
               hireDate: e.hireDate || "",
               role: e.role || "",
@@ -462,6 +1179,7 @@
               fund: "",
               other: "",
               tax: "",
+              leaveDeduct: "",
               net: "",
             }));
           } else {
@@ -470,6 +1188,8 @@
         } else {
           currentRows = rows;
         }
+        syncBaseFromEmployees();
+        currentRows.forEach((row) => autoCalcNet(row));
         renderTable(currentRows);
       }
 
@@ -482,10 +1202,28 @@
 
       document.getElementById("saveBtn").onclick = function () {
         const month = getCurrentMonth();
+        const before = currentRows.length;
+        const toSave = currentRows.filter((r) => (r.name || "").trim() !== "");
+        if (toSave.length < before) {
+          currentRows.length = 0;
+          toSave.forEach((r) => currentRows.push(r));
+          renderTable(currentRows);
+          showToast("已过滤 " + (before - toSave.length) + " 条空行，已保存 " + toSave.length + " 条（" + month + "）");
+        } else {
+          showToast("已保存（" + month + "，" + toSave.length + " 条）");
+        }
         const all = loadAllData();
         all[month] = currentRows;
         saveAllData(all);
-        alert("已保存到本机（月份：" + month + "）");
+        try {
+          localStorage.setItem(EXPECTED_DAYS_KEY, String(getExpectedDays()));
+          localStorage.setItem(SOCIAL_BASE_KEY, JSON.stringify({
+            pension: getSocialBase("pension"),
+            medical: getSocialBase("medical"),
+            unemp: getSocialBase("unemp"),
+            fund: getSocialBase("fund"),
+          }));
+        } catch (e) {}
       };
 
       document.getElementById("copyPrevBtn").onclick = function () {
@@ -498,52 +1236,58 @@
           String(prevMonth.getMonth() + 1).padStart(2, "0");
         const all = loadAllData();
         if (!all[pm] || all[pm].length === 0) {
-          alert("上月（" + pm + "）没有数据");
+          showToast("上月（" + pm + "）没有数据");
           return;
         }
         currentRows = JSON.parse(JSON.stringify(all[pm]));
+        currentRows.forEach((row) => autoCalcNet(row));
         renderTable(currentRows);
-        alert("已从 " + pm + " 复制到当前月份");
+        showToast("已从 " + pm + " 复制 " + currentRows.length + " 条");
       };
 
       document.getElementById("exportBtn").onclick = function () {
         const month = getCurrentMonth();
+        const prevMonth = getPrevMonthKey(month);
         const header = [
           "姓名",
-          "入职时间",
-          "工种/岗位",
           "出勤天数",
           "基本工资",
           "实际工资",
           "补贴",
           "奖金",
+          "税前",
           "养老",
           "医疗",
           "失业",
           "公积金",
+          "缺勤扣款",
           "其他扣款",
           "个税",
+          "扣款小计",
           "实发",
+          "上月实发",
         ];
         const lines = [
           header.join(","),
           ...currentRows.map((r) =>
             [
               r.name,
-              r.hireDate,
-              r.role,
               r.attendance,
               r.base,
               r.real,
               r.allowance,
               r.bonus,
+              r.gross,
               r.pension,
               r.medical,
               r.unemp,
               r.fund,
+              r.leaveDeduct,
               r.other,
               r.tax,
+              r.deductTotal,
               r.net,
+              prevMonth ? getLastMonthNetByName(prevMonth, r.name) : "",
             ]
               .map((v) => (v == null ? "" : String(v)))
               .join(",")
@@ -559,12 +1303,23 @@
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+        showToast("已导出 " + currentRows.length + " 条");
       };
 
       // 员工管理
       function renderEmployees() {
         const tbody = document.getElementById("empTbody");
         tbody.innerHTML = "";
+        if (employees.length === 0) {
+          const tr = document.createElement("tr");
+          const td = document.createElement("td");
+          td.colSpan = 7;
+          td.className = "empty-state";
+          td.textContent = "暂无员工，请点击「新增员工」";
+          tr.appendChild(td);
+          tbody.appendChild(tr);
+          return;
+        }
         employees.forEach((e, index) => {
           const tr = document.createElement("tr");
           function makeCell(key, isSticky) {
@@ -575,12 +1330,17 @@
             input.value = e[key] ?? "";
             input.addEventListener("input", () => {
               employees[index][key] = input.value;
+              if (key === "hireDate") renderEmployees();
             });
             td.appendChild(input);
             return td;
           }
           tr.appendChild(makeCell("name", true));
           tr.appendChild(makeCell("hireDate", false));
+          const ydTd = document.createElement("td");
+          ydTd.className = "cell-readonly";
+          ydTd.textContent = calcYears(e.hireDate || "");
+          tr.appendChild(ydTd);
           tr.appendChild(makeCell("role", false));
           tr.appendChild(makeCell("baseSalary", false));
           tr.appendChild(makeCell("status", false));
@@ -601,22 +1361,141 @@
       }
 
       function switchPage(page) {
-        const p1 = document.getElementById("pagePayroll");
-        const p2 = document.getElementById("pageEmployees");
-        const t1 = document.getElementById("tabPayroll");
-        const t2 = document.getElementById("tabEmployees");
+        const pages = ["pagePayroll", "pageEmployees", "pageBases", "pageHistory", "pageSummary"];
+        const tabs = ["tabPayroll", "tabEmployees", "tabBases", "tabHistory", "tabSummary"];
+        const keys = ["payroll", "employees", "bases", "history", "summary"];
+        pages.forEach((id, i) => { const el = document.getElementById(id); if (el) el.style.display = keys[i] === page ? "" : "none"; });
+        tabs.forEach((id, i) => { const el = document.getElementById(id); if (el) el.classList.toggle("active", keys[i] === page); });
         if (page === "payroll") {
-          p1.style.display = "";
-          p2.style.display = "none";
-          t1.classList.add("active");
-          t2.classList.remove("active");
-        } else {
-          p1.style.display = "none";
-          p2.style.display = "";
-          t1.classList.remove("active");
-          t2.classList.add("active");
+          syncBaseFromEmployees();
+          currentRows.forEach((row) => autoCalcNet(row));
+          renderTable(currentRows);
+        } else if (page === "employees") {
           renderEmployees();
+        } else if (page === "bases") {
+          fillBasesPage();
+        } else if (page === "history") {
+          fillHistoryPage();
+        } else if (page === "summary") {
+          fillSummaryPage();
         }
+      }
+      function getSummaryRows() {
+        const all = loadAllData();
+        const months = Object.keys(all).filter((k) => Array.isArray(all[k]) && all[k].length > 0).sort();
+        const rows = [];
+        months.forEach((m) => {
+          const monthRows = all[m];
+          const count = monthRows.filter((r) => (r.name || "").trim() !== "").length;
+          const gross = monthRows.reduce((a, r) => a + toNumber(r.gross), 0);
+          const pension = monthRows.reduce((a, r) => a + toNumber(r.pension), 0);
+          const medical = monthRows.reduce((a, r) => a + toNumber(r.medical), 0);
+          const unemp = monthRows.reduce((a, r) => a + toNumber(r.unemp), 0);
+          const fund = monthRows.reduce((a, r) => a + toNumber(r.fund), 0);
+          const tax = monthRows.reduce((a, r) => a + toNumber(r.tax), 0);
+          const net = monthRows.reduce((a, r) => a + toNumber(r.net), 0);
+          rows.push({ month: m, count, gross, pension, medical, unemp, fund, tax, net });
+        });
+        return rows;
+      }
+      function fillSummaryPage() {
+        const summaryRows = getSummaryRows();
+        const tbody = document.getElementById("summaryTbody");
+        tbody.innerHTML = "";
+        let totGross = 0, totPension = 0, totMedical = 0, totUnemp = 0, totFund = 0, totTax = 0, totNet = 0;
+        let lastYear = "";
+        let yGross = 0, yPension = 0, yMedical = 0, yUnemp = 0, yFund = 0, yTax = 0, yNet = 0;
+        const fmt = (n) => n > 0 ? n.toFixed(2) : "";
+        const addRow = (label, c, g, p, m, u, f, tax, net, isSubtotal) => {
+          const tr = document.createElement("tr");
+          if (isSubtotal) tr.style.fontWeight = "600";
+          [label, c, fmt(g), fmt(p), fmt(m), fmt(u), fmt(f), fmt(p + m + u), fmt(tax), fmt(net)].forEach((v, i) => {
+            const td = document.createElement("td");
+            if (i === 0) td.classList.add("sticky");
+            td.textContent = v;
+            td.classList.add("cell-readonly");
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        };
+        summaryRows.forEach((r) => {
+          const year = (r.month || "").split("-")[0];
+          if (lastYear && year !== lastYear) {
+            addRow(lastYear + "年度小计", "—", yGross, yPension, yMedical, yUnemp, yFund, yTax, yNet, true);
+            yGross = yPension = yMedical = yUnemp = yFund = yTax = yNet = 0;
+          }
+          lastYear = year;
+          yGross += r.gross; yPension += r.pension; yMedical += r.medical; yUnemp += r.unemp; yFund += r.fund; yTax += r.tax; yNet += r.net;
+          totGross += r.gross; totPension += r.pension; totMedical += r.medical; totUnemp += r.unemp; totFund += r.fund; totTax += r.tax; totNet += r.net;
+          addRow(r.month.replace("-", "年") + "月", r.count, r.gross, r.pension, r.medical, r.unemp, r.fund, r.tax, r.net, false);
+        });
+        if (lastYear) addRow(lastYear + "年度小计", "—", yGross, yPension, yMedical, yUnemp, yFund, yTax, yNet, true);
+        const totSocial = totPension + totMedical + totUnemp;
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+        set("summ_total_count", months.length > 0 ? "—" : "");
+        set("summ_total_gross", totGross > 0 ? totGross.toFixed(2) : "");
+        set("summ_total_pension", totPension > 0 ? totPension.toFixed(2) : "");
+        set("summ_total_medical", totMedical > 0 ? totMedical.toFixed(2) : "");
+        set("summ_total_unemp", totUnemp > 0 ? totUnemp.toFixed(2) : "");
+        set("summ_total_fund", totFund > 0 ? totFund.toFixed(2) : "");
+        set("summ_total_social", totSocial > 0 ? totSocial.toFixed(2) : "");
+        set("summ_total_tax", totTax > 0 ? totTax.toFixed(2) : "");
+        set("summ_total_net", totNet > 0 ? totNet.toFixed(2) : "");
+      }
+      function fillHistoryPage() {
+        const all = loadAllData();
+        const months = Object.keys(all).filter((k) => Array.isArray(all[k]) && all[k].length > 0).sort().reverse();
+        const sel = document.getElementById("historyMonthSelect");
+        const hint = document.getElementById("historyMonthHint");
+        sel.innerHTML = "";
+        if (months.length === 0) {
+          sel.innerHTML = "<option value=\"\">暂无历史月份</option>";
+          hint.textContent = "";
+          document.getElementById("historyTbody").innerHTML = "";
+          return;
+        }
+        months.forEach((m) => {
+          const opt = document.createElement("option");
+          opt.value = m;
+          opt.textContent = m.replace("-", "年") + "月";
+          sel.appendChild(opt);
+        });
+        hint.textContent = "共 " + months.length + " 个月有记录";
+        renderHistoryTable(sel.value);
+      }
+      function renderHistoryTable(monthKey) {
+        const tbody = document.getElementById("historyTbody");
+        tbody.innerHTML = "";
+        if (!monthKey) return;
+        const all = loadAllData();
+        const rows = all[monthKey];
+        if (!Array.isArray(rows) || rows.length === 0) return;
+        const cols = ["name", "attendance", "base", "real", "allowance", "bonus", "gross", "pension", "medical", "unemp", "fund", "leaveDeduct", "other", "tax", "deductTotal", "net"];
+        rows.forEach((row) => {
+          const tr = document.createElement("tr");
+          cols.forEach((key, i) => {
+            const td = document.createElement("td");
+            if (i === 0) td.classList.add("sticky");
+            td.textContent = row[key] ?? "";
+            td.classList.add("cell-readonly");
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+        const sumField = (field) => rows.reduce((acc, r) => acc + toNumber(r[field]), 0);
+        const set = (id, field) => { const el = document.getElementById(id); if (el) el.textContent = sumField(field).toFixed(2); };
+        document.getElementById("hist_sum_attendance").textContent = sumField("attendance").toFixed(1);
+        set("hist_sum_base", "base"); set("hist_sum_real", "real"); set("hist_sum_allowance", "allowance"); set("hist_sum_bonus", "bonus");
+        set("hist_sum_gross", "gross"); set("hist_sum_pension", "pension"); set("hist_sum_medical", "medical"); set("hist_sum_unemp", "unemp");
+        set("hist_sum_fund", "fund"); set("hist_sum_leaveDeduct", "leaveDeduct"); set("hist_sum_other", "other"); set("hist_sum_tax", "tax");
+        set("hist_sum_deductTotal", "deductTotal"); set("hist_sum_net", "net");
+      }
+      function fillBasesPage() {
+        const b = getSocialBases();
+        const r = (() => { try { const raw = localStorage.getItem(SOCIAL_RATES_KEY); const p = raw ? JSON.parse(raw) : {}; return { ...DEFAULT_SOCIAL_RATES_PCT, ...p }; } catch (e) { return { ...DEFAULT_SOCIAL_RATES_PCT }; } })();
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+        set("basePension", b.pension); set("baseMedical", b.medical); set("baseUnemp", b.unemp); set("baseFund", b.fund);
+        set("ratePension", r.pension); set("rateMedical", r.medical); set("rateUnemp", r.unemp); set("rateFund", r.fund);
       }
 
       (function init() {
@@ -624,8 +1503,135 @@
         const m = String(now.getMonth() + 1).padStart(2, "0");
         document.getElementById("monthInput").value =
           now.getFullYear() + "-" + m;
+        try {
+          const saved = localStorage.getItem(EXPECTED_DAYS_KEY);
+          if (saved) setExpectedDays(saved);
+        } catch (e) {}
         employees = loadEmployees();
         loadMonth();
+        seedJan2026IfEmpty();
+        seedDec2025IfEmpty();
+        seedNov2025IfEmpty();
+        seedOct2025IfEmpty();
+        seedSep2025IfEmpty();
+        seedAug2025IfEmpty();
+        seedJul2025IfEmpty();
+        seedJun2025IfEmpty();
+        seedMay2025IfEmpty();
+        seedApr2025IfEmpty();
+        seedMar2025IfEmpty();
+        seedFeb2025IfEmpty();
+        seedNov2024IfEmpty();
+        seedOct2024IfEmpty();
+        seedSep2024IfEmpty();
+        seedAug2024IfEmpty();
+        seedJul2024IfEmpty();
+        seedJun2024IfEmpty();
+        seedApr2024IfEmpty();
+        seedMay2024IfEmpty();
+
+        document.getElementById("tabBases").onclick = function () { switchPage("bases"); };
+        document.getElementById("tabHistory").onclick = function () { switchPage("history"); };
+        document.getElementById("tabSummary").onclick = function () { switchPage("summary"); };
+        document.getElementById("summaryExportBtn").onclick = function () {
+          const rows = getSummaryRows();
+          const header = ["月份", "人数", "应发合计", "养老", "医疗", "失业", "公积金", "社保小计", "个税", "实发合计"];
+          const lines = [header.join(",")];
+          let lastY = "";
+          rows.forEach((r) => {
+            const y = (r.month || "").split("-")[0];
+            if (lastY && y !== lastY) {
+              const ys = rows.filter((x) => (x.month || "").startsWith(lastY + "-"));
+              const sg = ys.reduce((a, x) => a + x.gross, 0), sp = ys.reduce((a, x) => a + x.pension, 0), sm = ys.reduce((a, x) => a + x.medical, 0), su = ys.reduce((a, x) => a + x.unemp, 0), sf = ys.reduce((a, x) => a + x.fund, 0), st = ys.reduce((a, x) => a + x.tax, 0), sn = ys.reduce((a, x) => a + x.net, 0);
+              lines.push([lastY + "年度小计", "—", sg.toFixed(2), sp.toFixed(2), sm.toFixed(2), su.toFixed(2), sf.toFixed(2), (sp + sm + su).toFixed(2), st.toFixed(2), sn.toFixed(2)].join(","));
+            }
+            lastY = y;
+            const social = r.pension + r.medical + r.unemp;
+            lines.push([r.month.replace("-", "年") + "月", r.count, r.gross.toFixed(2), r.pension.toFixed(2), r.medical.toFixed(2), r.unemp.toFixed(2), r.fund.toFixed(2), social.toFixed(2), r.tax.toFixed(2), r.net.toFixed(2)].join(","));
+          });
+          if (lastY) {
+            const ys = rows.filter((x) => (x.month || "").startsWith(lastY + "-"));
+            const sg = ys.reduce((a, x) => a + x.gross, 0), sp = ys.reduce((a, x) => a + x.pension, 0), sm = ys.reduce((a, x) => a + x.medical, 0), su = ys.reduce((a, x) => a + x.unemp, 0), sf = ys.reduce((a, x) => a + x.fund, 0), st = ys.reduce((a, x) => a + x.tax, 0), sn = ys.reduce((a, x) => a + x.net, 0);
+            lines.push([lastY + "年度小计", "—", sg.toFixed(2), sp.toFixed(2), sm.toFixed(2), su.toFixed(2), sf.toFixed(2), (sp + sm + su).toFixed(2), st.toFixed(2), sn.toFixed(2)].join(","));
+          }
+          const csv = "\uFEFF" + lines.join("\n");
+          const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "成本汇总.csv";
+          a.click();
+          URL.revokeObjectURL(a.href);
+          showToast("已导出成本汇总");
+        };
+        document.getElementById("printBtn").onclick = function () {
+          window.print();
+        };
+        document.getElementById("historyExportBtn").onclick = function () {
+          const monthKey = document.getElementById("historyMonthSelect").value;
+          if (!monthKey) { showToast("请先选择月份"); return; }
+          const all = loadAllData();
+          const rows = all[monthKey];
+          if (!Array.isArray(rows) || rows.length === 0) { showToast("该月无数据"); return; }
+          const header = ["姓名", "出勤天数", "基本工资", "实际工资", "补贴", "奖金", "税前", "养老", "医疗", "失业", "公积金", "缺勤扣款", "其他扣款", "个税", "扣款小计", "实发"];
+          const lines = [header.join(","), ...rows.map((r) => ["name", "attendance", "base", "real", "allowance", "bonus", "gross", "pension", "medical", "unemp", "fund", "leaveDeduct", "other", "tax", "deductTotal", "net"].map((k) => (r[k] == null ? "" : String(r[k]))).join(","))];
+          const csv = "\uFEFF" + lines.join("\n");
+          const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "工资表-" + monthKey + ".csv";
+          a.click();
+          URL.revokeObjectURL(a.href);
+          showToast("已导出 " + monthKey);
+        };
+        document.getElementById("historyMonthSelect").addEventListener("change", function () {
+          renderHistoryTable(this.value);
+        });
+        document.getElementById("basesSaveBtn").onclick = function () {
+          const getVal = (id) => { const el = document.getElementById(id); const n = parseFloat(el && el.value); return isNaN(n) ? undefined : n; };
+          const bases = getSocialBases();
+          const ratesPct = (() => { try { const raw = localStorage.getItem(SOCIAL_RATES_KEY); return raw ? { ...DEFAULT_SOCIAL_RATES_PCT, ...JSON.parse(raw) } : { ...DEFAULT_SOCIAL_RATES_PCT }; } catch (e) { return { ...DEFAULT_SOCIAL_RATES_PCT }; } })();
+          const b = { ...bases, pension: getVal("basePension"), medical: getVal("baseMedical"), unemp: getVal("baseUnemp"), fund: getVal("baseFund") };
+          const r = { ...ratesPct, pension: getVal("ratePension"), medical: getVal("rateMedical"), unemp: getVal("rateUnemp"), fund: getVal("rateFund") };
+          Object.keys(b).forEach(k => { if (b[k] === undefined) b[k] = bases[k]; });
+          Object.keys(r).forEach(k => { if (r[k] === undefined) r[k] = ratesPct[k]; });
+          try {
+            localStorage.setItem(SOCIAL_BASE_KEY, JSON.stringify(b));
+            localStorage.setItem(SOCIAL_RATES_KEY, JSON.stringify(r));
+          } catch (e) {}
+          currentRows.forEach((row) => autoCalcNet(row));
+          renderTable(currentRows);
+          showToast("已保存基数与比例");
+        };
+        document.getElementById("basesResetBtn").onclick = function () {
+          try {
+            localStorage.setItem(SOCIAL_BASE_KEY, JSON.stringify({ ...DEFAULT_SOCIAL_BASES }));
+            localStorage.setItem(SOCIAL_RATES_KEY, JSON.stringify({ ...DEFAULT_SOCIAL_RATES_PCT }));
+          } catch (e) {}
+          fillBasesPage();
+          currentRows.forEach((row) => autoCalcNet(row));
+          renderTable(currentRows);
+          showToast("已恢复广州2025下限默认");
+        };
+
+        document.getElementById("btnThisMonth").onclick = function () {
+          const n = new Date();
+          document.getElementById("monthInput").value =
+            n.getFullYear() + "-" + String(n.getMonth() + 1).padStart(2, "0");
+          loadMonth();
+          showToast("已切换本月");
+        };
+        document.getElementById("btnPrevMonth").onclick = function () {
+          const n = new Date();
+          const prev = new Date(n.getFullYear(), n.getMonth() - 1, 1);
+          document.getElementById("monthInput").value =
+            prev.getFullYear() + "-" + String(prev.getMonth() + 1).padStart(2, "0");
+          loadMonth();
+          showToast("已切换上月");
+        };
+        document.getElementById("expectedDaysInput").addEventListener("input", function () {
+          currentRows.forEach((row) => autoCalcNet(row));
+          renderTable(currentRows);
+        });
 
         document.getElementById("tabPayroll").onclick = function () {
           switchPage("payroll");
@@ -647,7 +1653,7 @@
 
         document.getElementById("empSaveBtn").onclick = function () {
           saveEmployees(employees);
-          alert("员工信息已保存到本机");
+          showToast("员工档案已保存");
         };
       })();
     </script>
