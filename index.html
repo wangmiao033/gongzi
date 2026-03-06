@@ -6,197 +6,260 @@
     <title>公司工资管理表</title>
     <style>
       * { box-sizing: border-box; }
+      :root {
+        --side-bg: #0f172a;
+        --side-accent: #0ea5e9;
+        --side-text: #cbd5e1;
+        --side-hover: rgba(255,255,255,0.06);
+        --main-bg: #f1f5f9;
+        --card-bg: #ffffff;
+        --card-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        --card-radius: 12px;
+        --primary: #0ea5e9;
+        --primary-hover: #0284c7;
+        --success: #10b981;
+        --success-hover: #059669;
+        --border: #e2e8f0;
+        --border-light: #f1f5f9;
+        --text: #334155;
+        --text-muted: #64748b;
+        --table-head: #f8fafc;
+        --table-foot: #f1f5f9;
+      }
       body {
         margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-        background: #f1f5f9;
-        color: #334155;
+        font-family: "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--main-bg);
+        color: var(--text);
         min-height: 100vh;
+        font-size: 13px;
+        line-height: 1.5;
       }
-      .app {
-        display: flex;
-        min-height: 100vh;
-      }
+      .app { display: flex; min-height: 100vh; }
       .sidebar {
-        width: 200px;
-        background: #1e293b;
-        color: #e2e8f0;
-        padding: 20px 0;
+        width: 168px;
+        background: var(--side-bg);
+        color: var(--side-text);
+        padding: 16px 0;
         flex-shrink: 0;
+        position: relative;
+      }
+      .sidebar::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--side-accent), #38bdf8);
       }
       .sidebar-title {
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 600;
-        padding: 0 20px 16px;
-        border-bottom: 1px solid #334155;
-        margin-bottom: 12px;
+        letter-spacing: 0.02em;
+        padding: 0 14px 12px;
+        margin-bottom: 8px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        color: #f8fafc;
       }
       .nav-tab {
         display: block;
-        width: 100%;
-        padding: 10px 20px;
+        width: calc(100% - 8px);
+        margin: 0 4px;
+        padding: 8px 12px;
         border: none;
+        border-radius: 8px;
         background: none;
-        color: #94a3b8;
-        font-size: 14px;
+        color: var(--side-text);
+        font-size: 13px;
         text-align: left;
         cursor: pointer;
-        transition: background 0.15s, color 0.15s;
+        transition: background 0.2s, color 0.2s;
       }
-      .nav-tab:hover { background: #334155; color: #e2e8f0; }
-      .nav-tab.active { background: #0f172a; color: #fff; font-weight: 500; }
+      .nav-tab:hover { background: var(--side-hover); color: #f1f5f9; }
+      .nav-tab.active {
+        background: rgba(14, 165, 233, 0.15);
+        color: #7dd3fc;
+        font-weight: 500;
+      }
       .sidebar-footer {
         position: absolute;
-        bottom: 16px;
-        left: 20px;
-        right: 20px;
+        bottom: 12px;
+        left: 12px;
+        right: 12px;
         font-size: 11px;
         color: #64748b;
         line-height: 1.4;
       }
-      .sidebar { position: relative; }
       .main {
         flex: 1;
-        padding: 24px 32px 40px;
+        padding: 20px 24px 32px;
         overflow: auto;
       }
       .card {
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-        padding: 24px;
-        margin-bottom: 20px;
+        background: var(--card-bg);
+        border-radius: var(--card-radius);
+        box-shadow: var(--card-shadow);
+        padding: 18px 20px;
+        margin-bottom: 18px;
+        border: 1px solid var(--border-light);
       }
       .card-title {
-        font-size: 18px;
+        font-size: 16px;
         font-weight: 600;
         color: #0f172a;
-        margin: 0 0 20px 0;
+        margin: 0 0 14px 0;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-light);
       }
       .toolbar {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
-        margin-bottom: 16px;
+        gap: 8px;
+        margin-bottom: 12px;
         align-items: center;
       }
-      .toolbar label { font-size: 14px; color: #64748b; }
+      .toolbar label { font-size: 13px; color: var(--text-muted); }
       input, select {
-        padding: 8px 12px;
-        font-size: 14px;
+        padding: 6px 10px;
+        font-size: 13px;
         border-radius: 8px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--border);
         outline: none;
-        min-width: 120px;
+        min-width: 100px;
+        background: var(--card-bg);
+        transition: border-color 0.2s, box-shadow 0.2s;
       }
       input:focus, select:focus {
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.15);
       }
       button {
-        padding: 8px 16px;
-        font-size: 14px;
+        padding: 6px 12px;
+        font-size: 13px;
         border-radius: 8px;
         border: none;
         cursor: pointer;
-        transition: background 0.15s, transform 0.1s;
+        transition: background 0.2s, transform 0.05s;
       }
-      button.primary {
-        background: #3b82f6;
-        color: #fff;
-      }
-      button.primary:hover:not(:disabled) { background: #2563eb; }
+      button:active { transform: scale(0.98); }
+      button.primary { background: var(--primary); color: #fff; }
+      button.primary:hover:not(:disabled) { background: var(--primary-hover); }
       button.secondary {
-        background: #f1f5f9;
-        color: #475569;
+        background: var(--table-foot);
+        color: var(--text);
+        border: 1px solid var(--border);
       }
       button.secondary:hover:not(:disabled) { background: #e2e8f0; }
       button:disabled { opacity: 0.6; cursor: not-allowed; }
       .table-wrap {
         overflow: auto;
-        max-height: 60vh;
-        border-radius: 8px;
-        border: 1px solid #e2e8f0;
+        max-height: 58vh;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--card-bg);
       }
-      table { width: 100%; border-collapse: collapse; font-size: 13px; }
-      thead { background: #f8fafc; position: sticky; top: 0; z-index: 1; }
+      table { width: 100%; border-collapse: collapse; font-size: 12px; }
+      thead { background: var(--table-head); position: sticky; top: 0; z-index: 1; }
       th {
-        padding: 10px 12px;
+        padding: 8px 10px;
         text-align: center;
         font-weight: 600;
-        color: #475569;
-        border-bottom: 1px solid #e2e8f0;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border);
         white-space: nowrap;
+        font-size: 12px;
       }
       td {
-        padding: 8px 12px;
-        border-bottom: 1px solid #f1f5f9;
+        padding: 6px 10px;
+        border-bottom: 1px solid var(--border-light);
         text-align: center;
       }
-      td:first-child, th:first-child { text-align: left; }
-      tbody tr:hover { background: #f8fafc; }
+      td:first-child, th:first-child { text-align: left; padding-left: 12px; }
+      tbody tr { transition: background 0.15s; }
+      tbody tr:hover { background: #f0f9ff; }
       tbody tr:nth-child(even) { background: #fafbfc; }
-      tbody tr:nth-child(even):hover { background: #f1f5f9; }
+      tbody tr:nth-child(even):hover { background: #e0f2fe; }
       tfoot td {
         font-weight: 600;
-        background: #f1f5f9;
+        background: var(--table-foot);
         border-bottom: none;
-        padding: 10px 12px;
+        border-top: 1px solid var(--border);
+        padding: 8px 10px;
+        color: #0f172a;
       }
       th.sticky, td.sticky {
         position: sticky;
         left: 0;
         background: inherit;
         z-index: 2;
-        box-shadow: 1px 0 0 #e2e8f0;
+        box-shadow: 2px 0 4px -2px rgba(0,0,0,0.06);
       }
-      thead th.sticky { background: #f8fafc; }
-      tfoot td.sticky { background: #f1f5f9; }
+      thead th.sticky { background: var(--table-head); }
+      tfoot td.sticky { background: var(--table-foot); }
       input.cell-input {
         width: 100%;
-        min-width: 60px;
+        min-width: 52px;
         border: none;
         outline: none;
-        padding: 4px 0;
-        font-size: 13px;
+        padding: 2px 0;
+        font-size: 12px;
         background: transparent;
       }
       .hint {
         font-size: 12px;
-        color: #94a3b8;
-        margin-top: 12px;
+        color: var(--text-muted);
+        margin-top: 10px;
         line-height: 1.5;
       }
-      #addRowBtn, #empAddBtn { background: #3b82f6; color: #fff; }
-      #saveBtn { background: #10b981; color: #fff; }
-      #saveBtn:hover:not(:disabled) { background: #059669; }
+      #addRowBtn, #empAddBtn { background: var(--primary); color: #fff; }
+      #saveBtn { background: var(--success); color: #fff; }
+      #saveBtn:hover:not(:disabled) { background: var(--success-hover); }
       .toast {
         position: fixed;
-        bottom: 24px;
+        bottom: 20px;
         left: 50%;
         transform: translateX(-50%);
-        background: #1e293b;
+        background: #0f172a;
         color: #fff;
-        padding: 10px 20px;
-        border-radius: 8px;
-        font-size: 14px;
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-size: 13px;
         z-index: 9999;
         opacity: 0;
         transition: opacity 0.2s;
         pointer-events: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
       }
       .toast.show { opacity: 1; }
       .empty-state {
         text-align: center;
-        padding: 32px 16px;
-        color: #94a3b8;
-        font-size: 14px;
+        padding: 24px 16px;
+        color: var(--text-muted);
+        font-size: 13px;
       }
-      .cell-readonly { color: #64748b; font-size: 13px; }
+      .cell-readonly { color: var(--text-muted); font-size: 12px; }
+      code { background: var(--border-light); padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+      a { color: var(--primary); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      .summary-month-link { color: var(--primary); cursor: pointer; }
+      .slip-area { margin-top: 12px; }
+      .slip-card {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-bottom: 12px;
+        break-inside: avoid;
+        font-size: 13px;
+      }
+      .slip-card h4 { margin: 0 0 8px 0; font-size: 14px; }
+      .slip-card table { width: 100%; font-size: 12px; }
+      .slip-card td { padding: 2px 8px 2px 0; }
+      .slip-card td:first-child { color: var(--text-muted); width: 90px; }
       @media print {
         .sidebar, .toolbar, .hint, .toast, button, #printBtn { display: none !important; }
         .main { padding: 0; }
-        .card { box-shadow: none; }
+        .card { box-shadow: none; border: none; }
         body { background: #fff; }
       }
     </style>
@@ -210,7 +273,11 @@
         <button id="tabEmployees" class="nav-tab">员工管理</button>
         <button id="tabBases" class="nav-tab">基数设置</button>
         <button id="tabHistory" class="nav-tab">历史工资</button>
+        <button id="tabAttendance" class="nav-tab">考勤</button>
+        <button id="tabQuery" class="nav-tab">查询</button>
+        <button id="tabSlip" class="nav-tab">工资条</button>
         <button id="tabSummary" class="nav-tab">成本汇总</button>
+        <button id="tabBackup" class="nav-tab">数据备份</button>
         <div class="sidebar-footer">数据保存在本机浏览器，仅此电脑可见</div>
       </aside>
       <main class="main">
@@ -220,16 +287,22 @@
           <h2 class="card-title">工资表</h2>
           <div class="toolbar">
             <label>月份：<input id="monthInput" type="month" /></label>
+            <label style="margin-left:6px">跳转：<select id="monthJumpSelect"><option value="">选择已保存月份</option></select></label>
+            <button id="copyFromSelectBtn" class="secondary" type="button" title="将上面选中的月份数据复制到当前月份">从该月复制</button>
             <button id="btnThisMonth" class="secondary" type="button">本月</button>
             <button id="btnPrevMonth" class="secondary" type="button">上月</button>
             <button id="loadMonthBtn" class="secondary">加载月份</button>
             <button id="copyPrevBtn" class="secondary">从上月复制</button>
             <label style="margin-left:8px">应出勤(天)：<input id="expectedDaysInput" type="number" min="1" max="31" value="22" style="width:56px" /></label>
+            <span id="monthExpectedHint" style="margin-left:8px;font-size:12px;color:var(--primary);display:none"></span>
             <span style="margin-left:8px;font-size:12px;color:#94a3b8">缴费基数在「基数设置」中录入</span>
             <button id="addRowBtn" class="primary">新增一行</button>
+            <label style="margin-left:4px">从员工添加：<select id="addFromEmployeeSelect"><option value="">选择员工</option></select></label>
+            <span style="margin-left:10px">批量：<select id="batchType"><option value="allowance_add">补贴+</option><option value="base_multiply">基本工资×</option></select><input id="batchValue" type="number" step="0.01" placeholder="数值" style="width:64px;margin-left:2px" /><button id="batchApplyBtn" type="button" class="secondary">应用</button></span>
             <button id="saveBtn">保存到本机</button>
             <button id="exportBtn" class="secondary">导出 CSV</button>
             <button id="printBtn" class="secondary">打印</button>
+            <label style="margin-left:12px">本月备注：<input id="monthNoteInput" type="text" placeholder="可选，便于记录当月说明" style="width:180px" /></label>
           </div>
           <div class="table-wrap">
         <table id="payTable">
@@ -280,7 +353,7 @@
           </tfoot>
         </table>
           </div>
-          <div class="hint">「上月实发」为上一月该员工的实发金额，便于对比。社保基数在「基数设置」中录入；仅王淼缴纳公积金1200元。①实际工资=基本工资×出勤/应出勤 ②税前=实际+补贴+奖金 ③实发=税前−扣款小计。</div>
+          <div class="hint"><span id="attImportedHint" style="display:none;color:var(--primary);margin-right:8px">本月已导入考勤。</span>「上月实发」为上一月该员工的实发金额，便于对比。社保基数在「基数设置」中录入；仅王淼缴纳公积金1200元。修改基数或应出勤后表格会实时重算，保存后生效。①实际工资=基本工资×出勤/应出勤 ②税前=实际+补贴+奖金 ③实发=税前−扣款小计。</div>
         </div>
       </div>
 
@@ -327,11 +400,12 @@
             <label style="display:flex;flex-direction:column;gap:4px">公积金缴费基数 <input id="baseFund" type="number" min="0" step="1" placeholder="2500" /></label>
             <label style="display:flex;flex-direction:column;gap:4px">公积金个人比例(%) <input id="rateFund" type="number" min="0" max="100" step="0.01" placeholder="5" /></label>
           </div>
+          <label style="display:flex;align-items:center;gap:6px">发薪日(每月几日)：<input id="payDayInput" type="number" min="1" max="28" value="15" style="width:56px" /></label>
           <div class="toolbar">
             <button id="basesSaveBtn" class="primary">保存基数与比例</button>
             <button id="basesResetBtn" class="secondary">恢复广州2025下限默认</button>
           </div>
-          <div class="hint" style="margin-top:8px"><strong>请先点击「保存基数与比例」</strong>，保存后再打开工资表，表中的养老/医疗/失业金额会按新基数与比例自动更新。仅「王淼」缴纳公积金1200元，其他人公积金为0。</div>
+          <div class="hint" style="margin-top:8px"><strong>请先点击「保存基数与比例」</strong>，保存后再打开工资表，表中的养老/医疗/失业金额会按新基数与比例自动更新。发薪日用于导出与备注（如每月15号发薪）。仅「王淼」缴纳公积金1200元，其他人公积金为0。</div>
         </div>
       </div>
 
@@ -344,6 +418,7 @@
             <label>选择月份：<select id="historyMonthSelect"></select></label>
             <span id="historyMonthHint" style="margin-left:12px;font-size:13px;color:#64748b"></span>
             <button id="historyExportBtn" class="secondary">导出该月 CSV</button>
+            <button id="historyEditInPayrollBtn" class="secondary" type="button">在工资表中编辑</button>
           </div>
           <div class="table-wrap">
             <table id="historyTable">
@@ -394,12 +469,99 @@
         </div>
       </div>
 
+      <!-- 考勤页面：与企业微信打卡关联（导入考勤文件 → 同步出勤天数到工资表） -->
+      <div id="pageAttendance" style="display:none;">
+        <div class="card">
+          <h2 class="card-title">考勤 · 企业微信打卡关联</h2>
+          <p style="font-size:13px;color:var(--text-muted);margin:0 0 14px 0">从企业微信管理后台导出考勤/打卡数据后，在此上传文件，系统将按「姓名」匹配并写入对应月份的<strong>出勤天数</strong>，同步到工资表参与计算。</p>
+          <div class="toolbar">
+            <label>目标月份：<select id="attMonthSelect"><option value="">请选择月份</option></select></label>
+            <button id="attImportBtn" type="button" class="primary">从文件导入考勤</button>
+            <input id="attImportInput" type="file" accept=".csv,.txt,application/vnd.ms-excel" style="display:none" />
+          </div>
+          <div class="hint">
+            <strong>推荐步骤：</strong>① 企业微信 PC 端 → 管理后台 → 应用管理 → 打卡 → 导出记录（或「打卡月报」）；② 若导出为 Excel，请另存为 CSV；③ 上方选择要写入的月份后点击「从文件导入考勤」。<br/>
+            支持的 CSV 表头示例：<code>姓名,出勤天数</code> 或 <code>姓名,打卡天数</code>、<code>名字,出勤</code> 等（首行表头需包含“姓名”类列和“出勤”类列）。导入后仅更新该月工资表中已有员工的出勤天数，不会新增员工。
+          </div>
+        </div>
+      </div>
+
+      <!-- 查询页面：按姓名查各月工资 -->
+      <div id="pageQuery" style="display:none;">
+        <div class="card">
+          <h2 class="card-title">工资查询</h2>
+          <p style="font-size:12px;color:#64748b;margin:0 0 10px 0">按姓名查询该员工在各月的应发、实发等记录。</p>
+          <div class="toolbar">
+            <label>姓名：<input id="queryNameInput" type="text" placeholder="输入姓名" style="width:100px" /></label>
+            <button id="queryBtn" class="primary">查询</button>
+            <button id="queryExportBtn" class="secondary" type="button">导出该人汇总 CSV</button>
+          </div>
+          <div class="table-wrap">
+            <table id="queryTable">
+              <thead>
+                <tr>
+                  <th class="sticky">月份</th>
+                  <th>出勤</th>
+                  <th>基本工资</th>
+                  <th>实际工资</th>
+                  <th>补贴</th>
+                  <th>奖金</th>
+                  <th>税前</th>
+                  <th>养老</th>
+                  <th>医疗</th>
+                  <th>失业</th>
+                  <th>公积金</th>
+                  <th>个税</th>
+                  <th>实发</th>
+                </tr>
+              </thead>
+              <tbody id="queryTbody"></tbody>
+              <tfoot>
+                <tr>
+                  <td class="sticky">合计(月数)</td>
+                  <td id="query_sum_att"></td>
+                  <td id="query_sum_base"></td>
+                  <td id="query_sum_real"></td>
+                  <td id="query_sum_allowance"></td>
+                  <td id="query_sum_bonus"></td>
+                  <td id="query_sum_gross"></td>
+                  <td id="query_sum_pension"></td>
+                  <td id="query_sum_medical"></td>
+                  <td id="query_sum_unemp"></td>
+                  <td id="query_sum_fund"></td>
+                  <td id="query_sum_tax"></td>
+                  <td id="query_sum_net"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <div id="queryEmpty" class="empty-state" style="display:none;">请输入姓名并点击「查询」。</div>
+          <div class="hint">从已保存的工资表中按姓名汇总各月数据，合计行为各月数值之和（非平均）。</div>
+        </div>
+      </div>
+
+      <!-- 工资条页面：按月考勤条打印 -->
+      <div id="pageSlip" style="display:none;">
+        <div class="card">
+          <h2 class="card-title">工资条</h2>
+          <p style="font-size:13px;color:var(--text-muted);margin:0 0 12px 0">选择月份后生成每人一条工资条，便于打印发放。</p>
+          <div class="toolbar">
+            <label>月份：<select id="slipMonthSelect"><option value="">请选择月份</option></select></label>
+            <label style="margin-left:8px">仅显示(可选)：<select id="slipPersonSelect"><option value="">全部</option></select></label>
+            <button id="slipPrintBtn" type="button" class="primary">打印工资条</button>
+          </div>
+          <div id="slipArea" class="slip-area"></div>
+          <div class="hint">打印时将只输出工资条区域，侧栏与按钮会自动隐藏。</div>
+        </div>
+      </div>
+
       <!-- 成本汇总页面（日历式月度固定成本） -->
       <div id="pageSummary" style="display:none;">
         <div class="card">
           <h2 class="card-title">成本汇总</h2>
           <p style="font-size:13px;color:#64748b;margin:0 0 12px 0">按月汇总应发、社保、公积金、个税、实发等固定成本，便于核算与预算。</p>
           <div class="toolbar">
+            <label>年份：<select id="summaryYearSelect"><option value="">全部</option></select></label>
             <button id="summaryExportBtn" class="secondary">导出汇总 CSV</button>
           </div>
           <div class="table-wrap">
@@ -438,6 +600,30 @@
           <div class="hint">社保小计 = 养老+医疗+失业。实发合计为当月实际发放总额。</div>
         </div>
       </div>
+
+      <!-- 数据备份页面 -->
+      <div id="pageBackup" style="display:none;">
+        <div class="card">
+          <h2 class="card-title">数据备份与恢复</h2>
+          <p style="font-size:13px;color:#64748b;margin:0 0 16px 0">将工资表、员工档案、基数与比例等全部数据导出为一份文件，或从之前导出的文件恢复，便于换电脑或留档。</p>
+          <div class="toolbar">
+            <button id="backupBtn" class="primary">备份到文件</button>
+            <button id="restoreBtn" type="button" class="secondary">从文件恢复</button>
+            <input id="restoreInput" type="file" accept=".json" style="display:none" />
+          </div>
+          <div class="hint">备份文件为 JSON，包含所有月份工资、员工列表、社保基数与比例。恢复会覆盖当前本机数据，请确认后再操作。</div>
+
+          <h3 style="font-size:15px;margin:24px 0 12px 0;color:#0f172a">云端备份（免费）</h3>
+          <p style="font-size:13px;color:#64748b;margin:0 0 12px 0">使用 <a href="https://jsonbin.io" target="_blank" rel="noopener">JSONBin.io</a> 免费存储一份备份，换电脑或重装后可从云端恢复。免费约 1 万次/月，仅本应用占用很少。</p>
+          <div class="toolbar">
+            <label style="display:flex;align-items:center;gap:8px">Master Key：<input id="jsonbinKeyInput" type="password" placeholder="在 jsonbin.io 注册后获取" style="min-width:200px" /></label>
+            <button id="jsonbinSaveKeyBtn" type="button" class="secondary">保存密钥</button>
+            <button id="backupCloudBtn" type="button" class="primary">备份到云端</button>
+            <button id="restoreCloudBtn" type="button" class="secondary">从云端恢复</button>
+          </div>
+          <div class="hint">密钥仅保存在本机，不会上传。首次备份到云端后会记住位置，之后同一密钥下覆盖备份。<strong>保存工资表、员工档案或基数设置后会自动备份到云端</strong>（需已保存密钥）。</div>
+        </div>
+      </div>
       </main>
     </div>
 
@@ -447,6 +633,13 @@
       // 个人缴费比例（广州等）
       const SOCIAL_BASE_KEY = "payrollSocialBases";
       const SOCIAL_RATES_KEY = "payrollSocialRates";
+      const JSONBIN_MASTER_KEY = "payrollJsonbinMasterKey";
+      const JSONBIN_BIN_ID = "payrollJsonbinBinId";
+      const JSONBIN_API = "https://api.jsonbin.io/v3/b";
+      const PAYROLL_MONTH_NOTES = "payrollMonthNotes";
+      const EXPECTED_DAYS_BY_MONTH_KEY = "payrollExpectedDaysByMonth";
+      const PAYROLL_PAY_DAY_KEY = "payrollPayDay";
+      const ATTENDANCE_IMPORTED_KEY = "payrollAttendanceImported";
       // 广州单位参保个人比例（%）参考 https://gz.bendibao.com/gzsi/2016713/si218925.shtml
       const DEFAULT_SOCIAL_BASES = { pension: 5510, medical: 6236, unemp: 2500, fund: 2500 };
       const DEFAULT_SOCIAL_RATES_PCT = { pension: 8, medical: 2, unemp: 0.2, fund: 5 };
@@ -589,6 +782,15 @@
         { name: "王淼", attendance: "", base: "15000.00", real: "15000.00", allowance: "", bonus: "", gross: "15000.00", pension: "440.80", medical: "124.68", unemp: "5.00", fund: "1200.00", leaveDeduct: "", other: "", tax: "96.88", deductTotal: "1867.36", net: "13132.64" },
         { name: "吴伟滨", attendance: "", base: "5150.00", real: "5150.00", allowance: "", bonus: "", gross: "5150.00", pension: "440.80", medical: "124.68", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "570.48", net: "4579.52" },
         { name: "马纯敏", attendance: "", base: "5806.50", real: "5806.50", allowance: "", bonus: "", gross: "5806.50", pension: "440.80", medical: "124.68", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "7.08", deductTotal: "577.56", net: "5228.94" },
+      ];
+
+      // 2026年2月试算（企业微信上下班打卡月报 20260201-20260228：应出勤16天，实际出勤均为16；每月15号发工资）
+      const FEB2026_PAYROLL = [
+        { name: "龚辉", attendance: "16", base: "6774.20", real: "6774.20", allowance: "", bonus: "", gross: "6774.20", pension: "440.80", medical: "124.68", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "570.48", net: "6203.72" },
+        { name: "罗汉金", attendance: "16", base: "5411.30", real: "5411.30", allowance: "", bonus: "", gross: "5411.30", pension: "440.80", medical: "124.68", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "570.48", net: "4840.82" },
+        { name: "王淼", attendance: "16", base: "15000.00", real: "15000.00", allowance: "", bonus: "", gross: "15000.00", pension: "440.80", medical: "124.68", unemp: "5.00", fund: "1200.00", leaveDeduct: "", other: "", tax: "96.88", deductTotal: "1867.36", net: "13132.64" },
+        { name: "吴伟滨", attendance: "16", base: "5150.00", real: "5150.00", allowance: "", bonus: "", gross: "5150.00", pension: "440.80", medical: "124.68", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "0.00", deductTotal: "570.48", net: "4579.52" },
+        { name: "马纯敏", attendance: "16", base: "5806.50", real: "5806.50", allowance: "", bonus: "", gross: "5806.50", pension: "440.80", medical: "124.68", unemp: "5.00", fund: "0", leaveDeduct: "", other: "", tax: "7.08", deductTotal: "577.56", net: "5228.94" },
       ];
 
       // 2024年5月实际发放工资（广州熊动科技工资表录入）
@@ -764,6 +966,14 @@
         all["2026-01"] = JSON.parse(JSON.stringify(JAN2026_PAYROLL));
         saveAllData(all);
         showToast("已录入 2026年1月 工资数据（5人）");
+      }
+      function seedFeb2026IfEmpty() {
+        const all = loadAllData();
+        const existing = all["2026-02"];
+        if (existing && Array.isArray(existing) && existing.length > 0) return;
+        all["2026-02"] = JSON.parse(JSON.stringify(FEB2026_PAYROLL));
+        saveAllData(all);
+        showToast("已录入 2026年2月 试算数据（企业微信月报出勤 16 天，请将应出勤改为 16 查看）");
       }
       function seedDec2025IfEmpty() {
         const all = loadAllData();
@@ -1191,6 +1401,51 @@
         syncBaseFromEmployees();
         currentRows.forEach((row) => autoCalcNet(row));
         renderTable(currentRows);
+        var noteEl = document.getElementById("monthNoteInput");
+        if (noteEl) {
+          try {
+            var notesRaw = localStorage.getItem(PAYROLL_MONTH_NOTES);
+            var notes = notesRaw ? JSON.parse(notesRaw) : {};
+            noteEl.value = notes[getCurrentMonth()] || "";
+          } catch (e) { noteEl.value = ""; }
+        }
+        var hintEl = document.getElementById("monthExpectedHint");
+        if (hintEl) {
+          if (getCurrentMonth() === "2026-02") {
+            hintEl.style.display = "inline";
+            hintEl.textContent = "2月应出勤建议 16 天（企业微信月报），请将上方应出勤改为 16 后查看试算。每月15号发工资。";
+          } else { hintEl.style.display = "none"; hintEl.textContent = ""; }
+        }
+        try {
+          var byMonth = localStorage.getItem(EXPECTED_DAYS_BY_MONTH_KEY);
+          var obj = byMonth ? JSON.parse(byMonth) : {};
+          if (obj[month]) setExpectedDays(String(obj[month]));
+        } catch (e) {}
+        var attHint = document.getElementById("attImportedHint");
+        if (attHint) {
+          try {
+            var imp = localStorage.getItem(ATTENDANCE_IMPORTED_KEY);
+            var impObj = imp ? JSON.parse(imp) : {};
+            attHint.style.display = impObj[month] ? "inline" : "none";
+          } catch (e) { attHint.style.display = "none"; }
+        }
+        fillAddFromEmployeeSelect();
+      }
+
+      function fillAddFromEmployeeSelect() {
+        var sel = document.getElementById("addFromEmployeeSelect");
+        if (!sel) return;
+        var inTable = (currentRows || []).map(function (r) { return (r.name || "").trim(); }).filter(Boolean);
+        var active = (employees || []).filter(function (e) { return (e.status || "在职").trim() !== "离职"; });
+        var notIn = active.filter(function (e) { return inTable.indexOf((e.name || "").trim()) < 0; });
+        sel.innerHTML = "<option value=\"\">选择员工</option>";
+        notIn.forEach(function (e) {
+          var opt = document.createElement("option");
+          opt.value = (e.name || "").trim();
+          opt.textContent = (e.name || "") + (e.baseSalary ? " (" + e.baseSalary + ")" : "");
+          opt.setAttribute("data-base", e.baseSalary != null ? String(e.baseSalary) : "");
+          sel.appendChild(opt);
+        });
       }
 
       document.getElementById("loadMonthBtn").onclick = loadMonth;
@@ -1198,10 +1453,65 @@
       document.getElementById("addRowBtn").onclick = function () {
         currentRows.push(emptyRow());
         renderTable(currentRows);
+        fillAddFromEmployeeSelect();
+      };
+      document.getElementById("addFromEmployeeSelect").addEventListener("change", function () {
+        var val = (this.value || "").trim();
+        if (!val) return;
+        var opt = this.options[this.selectedIndex];
+        var base = opt && opt.getAttribute("data-base") ? opt.getAttribute("data-base") : "";
+        currentRows.push({
+          name: val, attendance: "", base: base, real: base, allowance: "", bonus: "", gross: "", pension: "", medical: "", unemp: "", fund: "", leaveDeduct: "", other: "", tax: "", deductTotal: "", net: ""
+        });
+        currentRows.forEach(function (row) { autoCalcNet(row); });
+        renderTable(currentRows);
+        this.value = "";
+        fillAddFromEmployeeSelect();
+      });
+      document.getElementById("batchApplyBtn").onclick = function () {
+        var typ = document.getElementById("batchType") && document.getElementById("batchType").value;
+        var val = parseFloat(document.getElementById("batchValue") && document.getElementById("batchValue").value);
+        if (typ === "allowance_add") {
+          if (isNaN(val)) { showToast("请输入数值"); return; }
+          currentRows.forEach(function (r) {
+            if ((r.name || "").trim()) {
+              var cur = parseFloat(r.allowance) || 0;
+              r.allowance = (cur + val).toFixed(2);
+            }
+          });
+          showToast("已对 " + currentRows.filter(function (r) { return (r.name || "").trim(); }).length + " 人补贴 +" + val);
+        } else if (typ === "base_multiply") {
+          if (isNaN(val) || val <= 0) { showToast("请输入大于0的比例（如1.05表示涨5%）"); return; }
+          currentRows.forEach(function (r) {
+            if ((r.name || "").trim() && (r.base != null && r.base !== "")) {
+              var cur = parseFloat(r.base) || 0;
+              r.base = (cur * val).toFixed(2);
+            }
+          });
+          showToast("已对基本工资 ×" + val);
+        }
+        currentRows.forEach(function (row) { autoCalcNet(row); });
+        renderTable(currentRows);
       };
 
       document.getElementById("saveBtn").onclick = function () {
         const month = getCurrentMonth();
+        var expected = getExpectedDays();
+        var overAtt = currentRows.filter(function (r) {
+          var n = (r.name || "").trim();
+          if (!n) return false;
+          var att = parseFloat(r.attendance);
+          return !isNaN(att) && att > expected;
+        });
+        if (overAtt.length > 0) {
+          showToast("存在出勤天数大于应出勤(" + expected + "天)：" + overAtt.map(function (r) { return r.name; }).join("、") + "，请核对");
+        }
+        var active = (employees || []).filter(function (e) { return (e.status || "在职").trim() !== "离职"; });
+        var inTable = currentRows.map(function (r) { return (r.name || "").trim(); }).filter(Boolean);
+        var missing = active.filter(function (e) { return inTable.indexOf((e.name || "").trim()) < 0; });
+        if (missing.length > 0) {
+          showToast("以下在职员工未在本月表中：" + missing.map(function (e) { return e.name; }).join("、") + "，请核对");
+        }
         const before = currentRows.length;
         const toSave = currentRows.filter((r) => (r.name || "").trim() !== "");
         if (toSave.length < before) {
@@ -1209,13 +1519,25 @@
           toSave.forEach((r) => currentRows.push(r));
           renderTable(currentRows);
           showToast("已过滤 " + (before - toSave.length) + " 条空行，已保存 " + toSave.length + " 条（" + month + "）");
-        } else {
+        } else if (missing.length === 0) {
           showToast("已保存（" + month + "，" + toSave.length + " 条）");
         }
         const all = loadAllData();
         all[month] = currentRows;
         saveAllData(all);
         try {
+          var byMonthRaw = localStorage.getItem(EXPECTED_DAYS_BY_MONTH_KEY);
+          var byMonth = byMonthRaw ? JSON.parse(byMonthRaw) : {};
+          byMonth[month] = getExpectedDays();
+          localStorage.setItem(EXPECTED_DAYS_BY_MONTH_KEY, JSON.stringify(byMonth));
+          var noteEl = document.getElementById("monthNoteInput");
+          if (noteEl) {
+            var notesRaw = localStorage.getItem(PAYROLL_MONTH_NOTES);
+            var notes = notesRaw ? JSON.parse(notesRaw) : {};
+            var txt = (noteEl.value || "").trim();
+            if (txt) notes[month] = txt; else delete notes[month];
+            localStorage.setItem(PAYROLL_MONTH_NOTES, JSON.stringify(notes));
+          }
           localStorage.setItem(EXPECTED_DAYS_KEY, String(getExpectedDays()));
           localStorage.setItem(SOCIAL_BASE_KEY, JSON.stringify({
             pension: getSocialBase("pension"),
@@ -1224,6 +1546,7 @@
             fund: getSocialBase("fund"),
           }));
         } catch (e) {}
+        autoBackupToCloud();
       };
 
       document.getElementById("copyPrevBtn").onclick = function () {
@@ -1243,6 +1566,20 @@
         currentRows.forEach((row) => autoCalcNet(row));
         renderTable(currentRows);
         showToast("已从 " + pm + " 复制 " + currentRows.length + " 条");
+      };
+
+      document.getElementById("copyFromSelectBtn").onclick = function () {
+        var sel = document.getElementById("monthJumpSelect");
+        var src = sel && sel.value ? sel.value.trim() : "";
+        if (!src) { showToast("请先在「跳转」中选择一个已保存月份"); return; }
+        var all = loadAllData();
+        if (!all[src] || !all[src].length) { showToast("该月没有数据"); return; }
+        var target = getCurrentMonth();
+        if (src === target) { showToast("当前已是 " + target + "，无需复制"); return; }
+        currentRows = JSON.parse(JSON.stringify(all[src]));
+        currentRows.forEach(function (row) { autoCalcNet(row); });
+        renderTable(currentRows);
+        showToast("已从 " + src.replace("-", "年") + "月 复制到当前月，共 " + currentRows.length + " 条");
       };
 
       document.getElementById("exportBtn").onclick = function () {
@@ -1293,6 +1630,10 @@
               .join(",")
           ),
         ];
+        var payDay = 15;
+        try { var pd = localStorage.getItem(PAYROLL_PAY_DAY_KEY); if (pd) payDay = parseInt(pd, 10) || 15; } catch (e) {}
+        var payDate = month + "-" + String(Math.min(28, Math.max(1, payDay))).padStart(2, "0");
+        lines.push(""); lines.push("发薪日," + payDate);
         const csv = "\uFEFF" + lines.join("\n");
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
@@ -1361,24 +1702,308 @@
       }
 
       function switchPage(page) {
-        const pages = ["pagePayroll", "pageEmployees", "pageBases", "pageHistory", "pageSummary"];
-        const tabs = ["tabPayroll", "tabEmployees", "tabBases", "tabHistory", "tabSummary"];
-        const keys = ["payroll", "employees", "bases", "history", "summary"];
+        const pages = ["pagePayroll", "pageEmployees", "pageBases", "pageHistory", "pageAttendance", "pageQuery", "pageSlip", "pageSummary", "pageBackup"];
+        const tabs = ["tabPayroll", "tabEmployees", "tabBases", "tabHistory", "tabAttendance", "tabQuery", "tabSlip", "tabSummary", "tabBackup"];
+        const keys = ["payroll", "employees", "bases", "history", "attendance", "query", "slip", "summary", "backup"];
         pages.forEach((id, i) => { const el = document.getElementById(id); if (el) el.style.display = keys[i] === page ? "" : "none"; });
         tabs.forEach((id, i) => { const el = document.getElementById(id); if (el) el.classList.toggle("active", keys[i] === page); });
         if (page === "payroll") {
+          fillMonthJumpSelect();
           syncBaseFromEmployees();
           currentRows.forEach((row) => autoCalcNet(row));
           renderTable(currentRows);
+          fillAddFromEmployeeSelect();
+          var hintEl = document.getElementById("monthExpectedHint");
+          if (hintEl) {
+            if (getCurrentMonth() === "2026-02") {
+              hintEl.style.display = "inline";
+              hintEl.textContent = "2月应出勤建议 16 天（企业微信月报），请将上方应出勤改为 16 后查看试算。每月15号发工资。";
+            } else { hintEl.style.display = "none"; hintEl.textContent = ""; }
+          }
+          var attHint = document.getElementById("attImportedHint");
+          if (attHint) {
+            try {
+              var imp = localStorage.getItem(ATTENDANCE_IMPORTED_KEY);
+              var impObj = imp ? JSON.parse(imp) : {};
+              attHint.style.display = impObj[getCurrentMonth()] ? "inline" : "none";
+            } catch (e) { attHint.style.display = "none"; }
+          }
         } else if (page === "employees") {
           renderEmployees();
         } else if (page === "bases") {
           fillBasesPage();
         } else if (page === "history") {
           fillHistoryPage();
+        } else if (page === "attendance") {
+          fillAttendancePage();
+        } else if (page === "query") {
+          fillQueryPage();
+        } else if (page === "slip") {
+          fillSlipPage();
         } else if (page === "summary") {
           fillSummaryPage();
+        } else if (page === "backup") {
+          fillBackupPage();
         }
+      }
+      function fillAttendancePage() {
+        var sel = document.getElementById("attMonthSelect");
+        if (!sel) return;
+        var all = loadAllData();
+        var months = Object.keys(all).filter(function (k) { return Array.isArray(all[k]) && all[k].length > 0; }).sort().reverse();
+        var imported = {};
+        try { var raw = localStorage.getItem(ATTENDANCE_IMPORTED_KEY); if (raw) imported = JSON.parse(raw); } catch (e) {}
+        sel.innerHTML = "<option value=\"\">请选择月份</option>";
+        months.forEach(function (m) {
+          var opt = document.createElement("option");
+          opt.value = m;
+          opt.textContent = m.replace("-", "年") + "月" + (imported[m] ? " (已导入考勤)" : "");
+          sel.appendChild(opt);
+        });
+      }
+      function importAttendanceFromFile(file) {
+        var monthSel = document.getElementById("attMonthSelect");
+        var month = monthSel && monthSel.value ? monthSel.value.trim() : "";
+        if (!month) { showToast("请先选择目标月份"); return; }
+        var all = loadAllData();
+        var rows = all[month];
+        if (!Array.isArray(rows) || rows.length === 0) { showToast("该月暂无工资表数据，请先在「工资表」中保存 " + month + " 再导入考勤"); return; }
+        var reader = new FileReader();
+        reader.onload = function () {
+          var text = (reader.result || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+          var lines = text.split("\n").filter(function (l) { return l.trim(); });
+          if (lines.length < 2) { showToast("文件至少需要表头一行和数据一行"); return; }
+          var header = lines[0];
+          var nameCol = -1;
+          var attCol = -1;
+          var names = ["姓名", "名字", "员工", "成员"];
+          var atts = ["实际出勤天数", "出勤天数", "出勤", "打卡天数", "天数", "工作日出勤", "出勤天数(天)"];
+          var sep = header.indexOf("\t") >= 0 ? "\t" : ",";
+          var parts = header.split(sep).map(function (p) { return (p || "").trim(); });
+          for (var i = 0; i < parts.length; i++) {
+            var p = parts[i];
+            if (names.some(function (n) { return p.indexOf(n) >= 0; })) nameCol = i;
+            if (atts.some(function (n) { return p.indexOf(n) >= 0; }) || (p === "天数" && nameCol >= 0)) attCol = i;
+          }
+          if (nameCol < 0) { showToast("未识别到姓名列，请确保表头包含「姓名」或「名字」"); return; }
+          if (attCol < 0) { showToast("未识别到出勤列，请确保表头包含「出勤天数」或「打卡天数」等"); return; }
+          function matchPayrollName(importName, payrollName) {
+            var im = (importName || "").trim();
+            var py = (payrollName || "").trim();
+            if (!im || !py) return false;
+            if (im === py) return true;
+            if (im.indexOf("-") >= 0 && im.split("-").pop().trim() === py) return true;
+            if (im.indexOf(py) >= 0) return true;
+            return false;
+          }
+          var updated = 0;
+          for (var j = 1; j < lines.length; j++) {
+            var rowParts = lines[j].split(sep).map(function (p) { return (p || "").trim(); });
+            var name = rowParts[nameCol] || "";
+            var attVal = rowParts[attCol] != null ? String(rowParts[attCol]).trim().replace(/天$/, "") : "";
+            if (!name) continue;
+            var payrollRow = rows.find(function (r) { return matchPayrollName(name, r.name); });
+            if (payrollRow) {
+              payrollRow.attendance = attVal;
+              updated++;
+            }
+          }
+          saveAllData(all);
+          try {
+            var impRaw = localStorage.getItem(ATTENDANCE_IMPORTED_KEY);
+            var impObj = impRaw ? JSON.parse(impRaw) : {};
+            impObj[month] = true;
+            localStorage.setItem(ATTENDANCE_IMPORTED_KEY, JSON.stringify(impObj));
+          } catch (e) {}
+          showToast("已更新 " + month.replace("-", "年") + "月 " + updated + " 人的出勤天数");
+          if (getCurrentMonth() === month && typeof currentRows !== "undefined" && currentRows.length) {
+            currentRows = all[month].slice();
+            currentRows.forEach(function (row) { autoCalcNet(row); });
+            renderTable(currentRows);
+          }
+        };
+        reader.readAsText(file, "UTF-8");
+      }
+      function runQuery() {
+        const nameInput = (document.getElementById("queryNameInput") && document.getElementById("queryNameInput").value || "").trim();
+        if (!nameInput) { showToast("请输入姓名"); return; }
+        const all = loadAllData();
+        const months = Object.keys(all).filter((k) => Array.isArray(all[k]) && all[k].length > 0).sort();
+        var matchedNames = [];
+        months.forEach((m) => {
+          (all[m] || []).forEach((r) => {
+            var n = (r.name || "").trim();
+            if (n && matchedNames.indexOf(n) < 0 && (n === nameInput || n.indexOf(nameInput) >= 0)) matchedNames.push(n);
+          });
+        });
+        if (matchedNames.length === 0) {
+          showToast("未找到包含「" + nameInput + "」的工资记录");
+          return;
+        }
+        if (matchedNames.length > 1) {
+          showToast("找到多人（" + matchedNames.join("、") + "），请输入更完整姓名");
+          return;
+        }
+        const name = matchedNames[0];
+        const results = [];
+        months.forEach((m) => {
+          const row = (all[m] || []).find((r) => (r.name || "").trim() === name);
+          if (row) results.push({ month: m, ...row });
+        });
+        const tbody = document.getElementById("queryTbody");
+        const emptyEl = document.getElementById("queryEmpty");
+        const tableWrap = document.getElementById("queryTable") && document.getElementById("queryTable").closest(".table-wrap");
+        if (!tbody) return;
+        tbody.innerHTML = "";
+        if (emptyEl) emptyEl.style.display = "none";
+        if (tableWrap) tableWrap.style.display = results.length ? "" : "none";
+        function fmt(v) { return v != null && v !== "" ? Number(v).toFixed(2) : "0.00"; }
+        const sum = { att: 0, base: 0, real: 0, allowance: 0, bonus: 0, gross: 0, pension: 0, medical: 0, unemp: 0, fund: 0, tax: 0, net: 0 };
+        results.forEach((r) => {
+          const tr = document.createElement("tr");
+          const att = toNumber(r.attendance);
+          const base = toNumber(r.baseSalary != null ? r.baseSalary : r.base);
+          const real = toNumber(r.realWage != null ? r.realWage : r.real);
+          const allow = toNumber(r.allowance);
+          const bon = toNumber(r.bonus);
+          const gross = toNumber(r.gross);
+          const pen = toNumber(r.pension);
+          const med = toNumber(r.medical);
+          const un = toNumber(r.unemp);
+          const fd = toNumber(r.fund);
+          const tax = toNumber(r.tax);
+          const net = toNumber(r.net);
+          sum.att += att; sum.base += base; sum.real += real; sum.allowance += allow; sum.bonus += bon;
+          sum.gross += gross; sum.pension += pen; sum.medical += med; sum.unemp += un; sum.fund += fd; sum.tax += tax; sum.net += net;
+          tr.innerHTML = "<td class=\"sticky\">" + (r.month || "").replace("-", "年") + "月</td><td>" + att + "</td><td>" + fmt(base) + "</td><td>" + fmt(real) + "</td><td>" + fmt(allow) + "</td><td>" + fmt(bon) + "</td><td>" + fmt(gross) + "</td><td>" + fmt(pen) + "</td><td>" + fmt(med) + "</td><td>" + fmt(un) + "</td><td>" + fmt(fd) + "</td><td>" + fmt(tax) + "</td><td>" + fmt(net) + "</td>";
+          tbody.appendChild(tr);
+        });
+        const footIds = ["query_sum_att", "query_sum_base", "query_sum_real", "query_sum_allowance", "query_sum_bonus", "query_sum_gross", "query_sum_pension", "query_sum_medical", "query_sum_unemp", "query_sum_fund", "query_sum_tax", "query_sum_net"];
+        const footVals = [sum.att, sum.base, sum.real, sum.allowance, sum.bonus, sum.gross, sum.pension, sum.medical, sum.unemp, sum.fund, sum.tax, sum.net];
+        footIds.forEach((id, i) => { const el = document.getElementById(id); if (el) el.textContent = i === 0 ? sum.att : footVals[i].toFixed(2); });
+        const firstFoot = document.getElementById("query_sum_att");
+        if (firstFoot && firstFoot.closest("tfoot")) firstFoot.closest("tfoot").querySelector("td.sticky").textContent = "合计(共 " + results.length + " 月)";
+        if (results.length === 0) { showToast("未找到「" + name + "」的工资记录"); if (emptyEl) { emptyEl.style.display = "block"; emptyEl.textContent = "未找到「" + name + "」在任何月份的记录。"; } }
+        lastQueryResults = { name: name, results: results };
+      }
+      var lastQueryResults = null;
+      function fillQueryPage() {
+        const emptyEl = document.getElementById("queryEmpty");
+        const tableWrap = document.getElementById("queryTable") && document.getElementById("queryTable").closest(".table-wrap");
+        if (emptyEl) { emptyEl.style.display = "block"; emptyEl.textContent = "请输入姓名并点击「查询」。"; }
+        if (tableWrap) tableWrap.style.display = "none";
+        const tbody = document.getElementById("queryTbody");
+        if (tbody) tbody.innerHTML = "";
+        const tfootSticky = document.querySelector("#queryTable tfoot td.sticky");
+        if (tfootSticky) tfootSticky.textContent = "合计(月数)";
+      }
+      function fillSlipPage() {
+        var sel = document.getElementById("slipMonthSelect");
+        var area = document.getElementById("slipArea");
+        if (!sel || !area) return;
+        var all = loadAllData();
+        var months = Object.keys(all).filter(function (k) { return Array.isArray(all[k]) && all[k].length > 0; }).sort().reverse();
+        sel.innerHTML = "<option value=\"\">请选择月份</option>";
+        months.forEach(function (m) {
+          var opt = document.createElement("option");
+          opt.value = m;
+          opt.textContent = m.replace("-", "年") + "月";
+          sel.appendChild(opt);
+        });
+        renderSlipCards(sel.value);
+      }
+      function renderSlipCards(monthKey) {
+        var area = document.getElementById("slipArea");
+        var personSel = document.getElementById("slipPersonSelect");
+        if (!area) return;
+        area.innerHTML = "";
+        if (!monthKey) {
+          if (personSel) personSel.innerHTML = "<option value=\"\">全部</option>";
+          return;
+        }
+        var all = loadAllData();
+        var rows = all[monthKey];
+        if (!Array.isArray(rows) || rows.length === 0) {
+          if (personSel) personSel.innerHTML = "<option value=\"\">全部</option>";
+          return;
+        }
+        var names = [];
+        rows.forEach(function (r) { var n = (r.name || "").trim(); if (n && names.indexOf(n) < 0) names.push(n); });
+        if (personSel) {
+          personSel.innerHTML = "<option value=\"\">全部</option>";
+          names.forEach(function (n) {
+            var opt = document.createElement("option");
+            opt.value = n;
+            opt.textContent = n;
+            personSel.appendChild(opt);
+          });
+        }
+        var filterName = personSel && personSel.value ? personSel.value.trim() : "";
+        var payDay = 15;
+        try { var pd = localStorage.getItem(PAYROLL_PAY_DAY_KEY); if (pd) payDay = parseInt(pd, 10) || 15; } catch (e) {}
+        var payDate = monthKey + "-" + String(Math.min(28, Math.max(1, payDay))).padStart(2, "0");
+        function fmt(v) { return v != null && v !== "" ? Number(v).toFixed(2) : "0.00"; }
+        rows.forEach(function (r) {
+          if (!(r.name || "").trim()) return;
+          if (filterName && (r.name || "").trim() !== filterName) return;
+          var card = document.createElement("div");
+          card.className = "slip-card";
+          var base = toNumber(r.base);
+          var real = toNumber(r.real);
+          var gross = toNumber(r.gross);
+          var deduct = toNumber(r.deductTotal);
+          var net = toNumber(r.net);
+          card.innerHTML = "<h4>" + (r.name || "") + " · " + (monthKey || "").replace("-", "年") + "月 工资条</h4>" +
+            "<table><tr><td>基本工资</td><td>" + fmt(base) + "</td></tr><tr><td>出勤天数</td><td>" + (r.attendance != null ? r.attendance : "") + "</td></tr>" +
+            "<tr><td>实际工资</td><td>" + fmt(real) + "</td></tr><tr><td>补贴</td><td>" + fmt(r.allowance) + "</td></tr><tr><td>奖金</td><td>" + fmt(r.bonus) + "</td></tr>" +
+            "<tr><td>应发合计</td><td>" + fmt(gross) + "</td></tr><tr><td>扣款小计</td><td>" + fmt(deduct) + "</td></tr><tr><td><strong>实发</strong></td><td><strong>" + fmt(net) + "</strong></td></tr></table>" +
+            "<p style=\"margin:8px 0 0 0;font-size:11px;color:var(--text-muted)\">发薪日 " + payDate + "</p>";
+          area.appendChild(card);
+        });
+      }
+      function fillBackupPage() {
+        const key = localStorage.getItem(JSONBIN_MASTER_KEY);
+        const el = document.getElementById("jsonbinKeyInput");
+        if (el) el.value = key ? "••••••••" + (key.slice(-4)) : "";
+      }
+      function getBackupPayload() {
+        return {
+          payroll: localStorage.getItem(STORAGE_KEY),
+          employees: localStorage.getItem(EMP_STORAGE_KEY),
+          socialBases: localStorage.getItem(SOCIAL_BASE_KEY),
+          socialRates: localStorage.getItem(SOCIAL_RATES_KEY),
+          expectedDays: localStorage.getItem(EXPECTED_DAYS_KEY),
+          expectedDaysByMonth: localStorage.getItem(EXPECTED_DAYS_BY_MONTH_KEY),
+          payDay: localStorage.getItem(PAYROLL_PAY_DAY_KEY),
+          monthNotes: localStorage.getItem(PAYROLL_MONTH_NOTES),
+          attendanceImported: localStorage.getItem(ATTENDANCE_IMPORTED_KEY),
+          _version: 1,
+          _exportAt: new Date().toISOString(),
+        };
+      }
+      function setBackupPayload(data) {
+        if (data.payroll != null) localStorage.setItem(STORAGE_KEY, data.payroll);
+        if (data.employees != null) localStorage.setItem(EMP_STORAGE_KEY, data.employees);
+        if (data.socialBases != null) localStorage.setItem(SOCIAL_BASE_KEY, data.socialBases);
+        if (data.socialRates != null) localStorage.setItem(SOCIAL_RATES_KEY, data.socialRates);
+        if (data.expectedDays != null) localStorage.setItem(EXPECTED_DAYS_KEY, data.expectedDays);
+        if (data.expectedDaysByMonth != null) localStorage.setItem(EXPECTED_DAYS_BY_MONTH_KEY, data.expectedDaysByMonth);
+        if (data.payDay != null) localStorage.setItem(PAYROLL_PAY_DAY_KEY, data.payDay);
+        if (data.monthNotes != null) localStorage.setItem(PAYROLL_MONTH_NOTES, data.monthNotes);
+        if (data.attendanceImported != null) localStorage.setItem(ATTENDANCE_IMPORTED_KEY, data.attendanceImported);
+      }
+      function fillMonthJumpSelect() {
+        const sel = document.getElementById("monthJumpSelect");
+        if (!sel) return;
+        const all = loadAllData();
+        const months = Object.keys(all).filter((k) => Array.isArray(all[k]) && all[k].length > 0).sort().reverse();
+        sel.innerHTML = "<option value=\"\">选择已保存月份</option>";
+        months.forEach((m) => {
+          const opt = document.createElement("option");
+          opt.value = m;
+          opt.textContent = m.replace("-", "年") + "月";
+          sel.appendChild(opt);
+        });
       }
       function getSummaryRows() {
         const all = loadAllData();
@@ -1400,25 +2025,58 @@
       }
       function fillSummaryPage() {
         const summaryRows = getSummaryRows();
+        var yearSel = document.getElementById("summaryYearSelect");
+        var filterYear = yearSel && yearSel.value ? yearSel.value : "";
+        var rows = filterYear ? summaryRows.filter(function (r) { return (r.month || "").split("-")[0] === filterYear; }) : summaryRows;
+        if (yearSel) {
+          var years = [];
+          summaryRows.forEach(function (r) {
+            var y = (r.month || "").split("-")[0];
+            if (y && years.indexOf(y) < 0) years.push(y);
+          });
+          years.sort();
+          yearSel.innerHTML = "<option value=\"\">全部</option>";
+          years.forEach(function (y) {
+            var opt = document.createElement("option");
+            opt.value = y;
+            opt.textContent = y + " 年";
+            if (y === filterYear) opt.selected = true;
+            yearSel.appendChild(opt);
+          });
+        }
         const tbody = document.getElementById("summaryTbody");
         tbody.innerHTML = "";
         let totGross = 0, totPension = 0, totMedical = 0, totUnemp = 0, totFund = 0, totTax = 0, totNet = 0;
         let lastYear = "";
         let yGross = 0, yPension = 0, yMedical = 0, yUnemp = 0, yFund = 0, yTax = 0, yNet = 0;
         const fmt = (n) => n > 0 ? n.toFixed(2) : "";
-        const addRow = (label, c, g, p, m, u, f, tax, net, isSubtotal) => {
+        const addRow = (label, c, g, p, m, u, f, tax, net, isSubtotal, monthKey) => {
           const tr = document.createElement("tr");
           if (isSubtotal) tr.style.fontWeight = "600";
           [label, c, fmt(g), fmt(p), fmt(m), fmt(u), fmt(f), fmt(p + m + u), fmt(tax), fmt(net)].forEach((v, i) => {
             const td = document.createElement("td");
             if (i === 0) td.classList.add("sticky");
-            td.textContent = v;
-            td.classList.add("cell-readonly");
+            if (i === 0 && monthKey) {
+              td.innerHTML = "<a href=\"#\" class=\"summary-month-link\">" + (label || "") + "</a>";
+              td.classList.remove("cell-readonly");
+              td.querySelector("a").onclick = function (e) { e.preventDefault(); goToPayrollMonth(monthKey); };
+            } else {
+              td.textContent = v;
+              td.classList.add("cell-readonly");
+            }
             tr.appendChild(td);
           });
           tbody.appendChild(tr);
         };
-        summaryRows.forEach((r) => {
+        function goToPayrollMonth(month) {
+          if (!month) return;
+          document.getElementById("monthInput").value = month;
+          switchPage("payroll");
+          loadMonth();
+          fillMonthJumpSelect();
+          showToast("已切换到工资表 " + month.replace("-", "年") + "月");
+        }
+        rows.forEach((r) => {
           const year = (r.month || "").split("-")[0];
           if (lastYear && year !== lastYear) {
             addRow(lastYear + "年度小计", "—", yGross, yPension, yMedical, yUnemp, yFund, yTax, yNet, true);
@@ -1427,12 +2085,12 @@
           lastYear = year;
           yGross += r.gross; yPension += r.pension; yMedical += r.medical; yUnemp += r.unemp; yFund += r.fund; yTax += r.tax; yNet += r.net;
           totGross += r.gross; totPension += r.pension; totMedical += r.medical; totUnemp += r.unemp; totFund += r.fund; totTax += r.tax; totNet += r.net;
-          addRow(r.month.replace("-", "年") + "月", r.count, r.gross, r.pension, r.medical, r.unemp, r.fund, r.tax, r.net, false);
+          addRow(r.month.replace("-", "年") + "月", r.count, r.gross, r.pension, r.medical, r.unemp, r.fund, r.tax, r.net, false, r.month);
         });
         if (lastYear) addRow(lastYear + "年度小计", "—", yGross, yPension, yMedical, yUnemp, yFund, yTax, yNet, true);
         const totSocial = totPension + totMedical + totUnemp;
         const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-        set("summ_total_count", months.length > 0 ? "—" : "");
+        set("summ_total_count", rows.length > 0 ? "—" : "");
         set("summ_total_gross", totGross > 0 ? totGross.toFixed(2) : "");
         set("summ_total_pension", totPension > 0 ? totPension.toFixed(2) : "");
         set("summ_total_medical", totMedical > 0 ? totMedical.toFixed(2) : "");
@@ -1496,6 +2154,10 @@
         const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
         set("basePension", b.pension); set("baseMedical", b.medical); set("baseUnemp", b.unemp); set("baseFund", b.fund);
         set("ratePension", r.pension); set("rateMedical", r.medical); set("rateUnemp", r.unemp); set("rateFund", r.fund);
+        try {
+          var payDay = localStorage.getItem(PAYROLL_PAY_DAY_KEY);
+          set("payDayInput", payDay ? payDay : "15");
+        } catch (e) { set("payDayInput", "15"); }
       }
 
       (function init() {
@@ -1509,7 +2171,9 @@
         } catch (e) {}
         employees = loadEmployees();
         loadMonth();
+        fillMonthJumpSelect();
         seedJan2026IfEmpty();
+        seedFeb2026IfEmpty();
         seedDec2025IfEmpty();
         seedNov2025IfEmpty();
         seedOct2025IfEmpty();
@@ -1532,9 +2196,151 @@
 
         document.getElementById("tabBases").onclick = function () { switchPage("bases"); };
         document.getElementById("tabHistory").onclick = function () { switchPage("history"); };
+        document.getElementById("tabAttendance").onclick = function () { switchPage("attendance"); };
+        document.getElementById("tabQuery").onclick = function () { switchPage("query"); };
+        document.getElementById("tabSlip").onclick = function () { switchPage("slip"); };
         document.getElementById("tabSummary").onclick = function () { switchPage("summary"); };
+        document.getElementById("tabBackup").onclick = function () { switchPage("backup"); };
+        document.getElementById("queryBtn").onclick = function () { runQuery(); };
+        document.getElementById("queryExportBtn").onclick = function () {
+          if (!lastQueryResults || !lastQueryResults.results.length) { showToast("请先查询某人后再导出"); return; }
+          var name = lastQueryResults.name;
+          var rows = lastQueryResults.results;
+          var header = ["月份", "姓名", "出勤", "基本工资", "实际工资", "补贴", "奖金", "税前", "养老", "医疗", "失业", "公积金", "个税", "实发"];
+          function fmt(v) { return v != null && v !== "" ? (typeof v === "number" ? v.toFixed(2) : String(v)) : ""; }
+          var lines = [header.join(",")];
+          rows.forEach(function (r) {
+            var base = r.baseSalary != null ? r.baseSalary : r.base;
+            var real = r.realWage != null ? r.realWage : r.real;
+            lines.push([r.month, r.name, r.attendance, fmt(base), fmt(real), fmt(r.allowance), fmt(r.bonus), fmt(r.gross), fmt(r.pension), fmt(r.medical), fmt(r.unemp), fmt(r.fund), fmt(r.tax), fmt(r.net)].join(","));
+          });
+          var csv = "\uFEFF" + lines.join("\n");
+          var blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+          var a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "工资汇总-" + name + ".csv";
+          a.click();
+          URL.revokeObjectURL(a.href);
+          showToast("已导出 " + name + " 共 " + rows.length + " 月");
+        };
+        document.getElementById("attImportBtn").onclick = function () { document.getElementById("attImportInput").click(); };
+        document.getElementById("attImportInput").onchange = function () {
+          var f = this.files && this.files[0];
+          this.value = "";
+          if (!f) return;
+          importAttendanceFromFile(f);
+        };
+        document.getElementById("slipMonthSelect").addEventListener("change", function () { renderSlipCards(this.value); });
+        document.getElementById("slipPersonSelect").addEventListener("change", function () { renderSlipCards(document.getElementById("slipMonthSelect").value); });
+        document.getElementById("slipPrintBtn").onclick = function () { window.print(); };
+        document.getElementById("summaryYearSelect").addEventListener("change", fillSummaryPage);
+        document.addEventListener("keydown", function (e) {
+          if (e.ctrlKey && e.key === "s") {
+            e.preventDefault();
+            if (document.getElementById("pagePayroll") && document.getElementById("pagePayroll").style.display !== "none") {
+              var btn = document.getElementById("saveBtn");
+              if (btn) btn.click();
+            }
+          }
+        });
+        document.getElementById("monthJumpSelect").addEventListener("change", function () {
+          const v = this.value;
+          if (!v) return;
+          document.getElementById("monthInput").value = v;
+          loadMonth();
+          fillMonthJumpSelect();
+          showToast("已切换到 " + v.replace("-", "年") + "月");
+        });
+        document.getElementById("backupBtn").onclick = function () {
+          const data = {
+            payroll: localStorage.getItem(STORAGE_KEY),
+            employees: localStorage.getItem(EMP_STORAGE_KEY),
+            socialBases: localStorage.getItem(SOCIAL_BASE_KEY),
+            socialRates: localStorage.getItem(SOCIAL_RATES_KEY),
+            expectedDays: localStorage.getItem(EXPECTED_DAYS_KEY),
+            _version: 1,
+            _exportAt: new Date().toISOString(),
+          };
+          const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "工资管理备份-" + new Date().toISOString().slice(0, 10) + ".json";
+          a.click();
+          URL.revokeObjectURL(a.href);
+          showToast("已备份到文件");
+        };
+        document.getElementById("restoreBtn").onclick = function () { document.getElementById("restoreInput").click(); };
+        document.getElementById("restoreInput").onchange = function () {
+          const file = this.files && this.files[0];
+          this.value = "";
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = function () {
+            try {
+              const data = JSON.parse(reader.result);
+              setBackupPayload(data);
+              showToast("已恢复数据，正在刷新…");
+              setTimeout(function () { location.reload(); }, 800);
+            } catch (e) {
+              showToast("恢复失败：" + (e.message || "文件格式错误"));
+            }
+          };
+          reader.readAsText(file, "UTF-8");
+        };
+        document.getElementById("jsonbinSaveKeyBtn").onclick = function () {
+          const v = (document.getElementById("jsonbinKeyInput").value || "").trim();
+          if (!v) { showToast("请输入 Master Key"); return; }
+          if (v.startsWith("••••")) { showToast("请粘贴从 jsonbin.io 获取的新密钥"); return; }
+          try {
+            localStorage.setItem(JSONBIN_MASTER_KEY, v);
+            document.getElementById("jsonbinKeyInput").value = "••••••••" + v.slice(-4);
+            showToast("密钥已保存（仅存本机）");
+          } catch (e) { showToast("保存失败"); }
+        };
+        function autoBackupToCloud() {
+          const key = localStorage.getItem(JSONBIN_MASTER_KEY);
+          if (!key) return;
+          const payload = getBackupPayload();
+          const binId = localStorage.getItem(JSONBIN_BIN_ID);
+          const url = binId ? JSONBIN_API + "/" + binId : JSONBIN_API;
+          const opts = { method: binId ? "PUT" : "POST", headers: { "Content-Type": "application/json", "X-Master-Key": key }, body: JSON.stringify(payload) };
+          fetch(url, opts).then(function (r) { return r.json(); }).then(function (res) {
+            if (res.metadata && res.metadata.id) localStorage.setItem(JSONBIN_BIN_ID, res.metadata.id);
+            if (res.message && res.message.toLowerCase().indexOf("error") >= 0) throw new Error(res.message);
+            showToast("已自动备份到云端");
+          }).catch(function () {});
+        }
+        document.getElementById("backupCloudBtn").onclick = function () {
+          const key = localStorage.getItem(JSONBIN_MASTER_KEY);
+          if (!key) { showToast("请先在下方输入并保存 Master Key"); return; }
+          const payload = getBackupPayload();
+          const binId = localStorage.getItem(JSONBIN_BIN_ID);
+          const url = binId ? JSONBIN_API + "/" + binId : JSONBIN_API;
+          const opts = { method: binId ? "PUT" : "POST", headers: { "Content-Type": "application/json", "X-Master-Key": key }, body: JSON.stringify(payload) };
+          fetch(url, opts).then(function (r) { return r.json(); }).then(function (res) {
+            if (res.metadata && res.metadata.id) localStorage.setItem(JSONBIN_BIN_ID, res.metadata.id);
+            if (res.message && res.message.toLowerCase().indexOf("error") >= 0) throw new Error(res.message);
+            showToast("已备份到云端");
+          }).catch(function (e) { showToast("云端备份失败：" + (e.message || "请检查密钥与网络")); });
+        };
+        document.getElementById("restoreCloudBtn").onclick = function () {
+          const key = localStorage.getItem(JSONBIN_MASTER_KEY);
+          const binId = localStorage.getItem(JSONBIN_BIN_ID);
+          if (!key || !binId) { showToast("请先保存密钥并执行一次「备份到云端」"); return; }
+          if (!confirm("从云端恢复将覆盖当前本机数据，确定继续？")) return;
+          fetch(JSONBIN_API + "/" + binId, { headers: { "X-Master-Key": key } }).then(function (r) { return r.json(); }).then(function (res) {
+            const data = res.record != null ? res.record : res;
+            if (!data || typeof data !== "object") throw new Error("云端数据无效");
+            setBackupPayload(data);
+            showToast("已从云端恢复，正在刷新…");
+            setTimeout(function () { location.reload(); }, 800);
+          }).catch(function (e) { showToast("从云端恢复失败：" + (e.message || "请检查密钥与网络")); });
+        };
         document.getElementById("summaryExportBtn").onclick = function () {
-          const rows = getSummaryRows();
+          var rows = getSummaryRows();
+          var yearSel = document.getElementById("summaryYearSelect");
+          var filterYear = yearSel && yearSel.value ? yearSel.value : "";
+          if (filterYear) rows = rows.filter(function (r) { return (r.month || "").split("-")[0] === filterYear; });
           const header = ["月份", "人数", "应发合计", "养老", "医疗", "失业", "公积金", "社保小计", "个税", "实发合计"];
           const lines = [header.join(",")];
           let lastY = "";
@@ -1558,7 +2364,7 @@
           const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
           const a = document.createElement("a");
           a.href = URL.createObjectURL(blob);
-          a.download = "成本汇总.csv";
+          a.download = filterYear ? "成本汇总-" + filterYear + ".csv" : "成本汇总.csv";
           a.click();
           URL.revokeObjectURL(a.href);
           showToast("已导出成本汇总");
@@ -1586,6 +2392,15 @@
         document.getElementById("historyMonthSelect").addEventListener("change", function () {
           renderHistoryTable(this.value);
         });
+        document.getElementById("historyEditInPayrollBtn").onclick = function () {
+          var monthKey = document.getElementById("historyMonthSelect").value;
+          if (!monthKey) { showToast("请先选择月份"); return; }
+          document.getElementById("monthInput").value = monthKey;
+          switchPage("payroll");
+          loadMonth();
+          fillMonthJumpSelect();
+          showToast("已切换到工资表 " + monthKey.replace("-", "年") + "月，可编辑");
+        };
         document.getElementById("basesSaveBtn").onclick = function () {
           const getVal = (id) => { const el = document.getElementById(id); const n = parseFloat(el && el.value); return isNaN(n) ? undefined : n; };
           const bases = getSocialBases();
@@ -1594,6 +2409,11 @@
           const r = { ...ratesPct, pension: getVal("ratePension"), medical: getVal("rateMedical"), unemp: getVal("rateUnemp"), fund: getVal("rateFund") };
           Object.keys(b).forEach(k => { if (b[k] === undefined) b[k] = bases[k]; });
           Object.keys(r).forEach(k => { if (r[k] === undefined) r[k] = ratesPct[k]; });
+          var payDayEl = document.getElementById("payDayInput");
+          if (payDayEl) {
+            var pd = parseInt(payDayEl.value, 10);
+            if (pd >= 1 && pd <= 28) localStorage.setItem(PAYROLL_PAY_DAY_KEY, String(pd));
+          }
           try {
             localStorage.setItem(SOCIAL_BASE_KEY, JSON.stringify(b));
             localStorage.setItem(SOCIAL_RATES_KEY, JSON.stringify(r));
@@ -1601,6 +2421,7 @@
           currentRows.forEach((row) => autoCalcNet(row));
           renderTable(currentRows);
           showToast("已保存基数与比例");
+          autoBackupToCloud();
         };
         document.getElementById("basesResetBtn").onclick = function () {
           try {
@@ -1611,6 +2432,7 @@
           currentRows.forEach((row) => autoCalcNet(row));
           renderTable(currentRows);
           showToast("已恢复广州2025下限默认");
+          autoBackupToCloud();
         };
 
         document.getElementById("btnThisMonth").onclick = function () {
@@ -1654,6 +2476,7 @@
         document.getElementById("empSaveBtn").onclick = function () {
           saveEmployees(employees);
           showToast("员工档案已保存");
+          autoBackupToCloud();
         };
       })();
     </script>
