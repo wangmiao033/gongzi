@@ -8,15 +8,18 @@
       * { box-sizing: border-box; }
       :root {
         --side-bg: #0f172a;
-        --side-accent: #0ea5e9;
+        --side-accent: #22d3ee;
         --side-text: #cbd5e1;
         --side-hover: rgba(255,255,255,0.06);
-        --main-bg: #f1f5f9;
+        --main-bg: #f6f8fc;
         --card-bg: #ffffff;
-        --card-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        --card-shadow: 0 10px 30px rgba(2, 8, 23, 0.06);
         --card-radius: 12px;
-        --primary: #0ea5e9;
-        --primary-hover: #0284c7;
+        --radius-sm: 10px;
+        --primary: #2563eb;
+        --primary-hover: #1d4ed8;
+        --accent: #22d3ee;
+        --accent-2: #a78bfa;
         --success: #10b981;
         --success-hover: #059669;
         --border: #e2e8f0;
@@ -25,24 +28,42 @@
         --text-muted: #64748b;
         --table-head: #f8fafc;
         --table-foot: #f1f5f9;
+        --ring: 0 0 0 3px rgba(37, 99, 235, 0.14);
+        --shadow-soft: 0 18px 50px rgba(2, 8, 23, 0.08);
+        --glass: rgba(255,255,255,0.72);
       }
       body {
         margin: 0;
         font-family: "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: var(--main-bg);
+        background: radial-gradient(1200px 700px at 15% -10%, rgba(34, 211, 238, 0.20), rgba(34, 211, 238, 0) 55%),
+                    radial-gradient(900px 520px at 85% 0%, rgba(167, 139, 250, 0.18), rgba(167, 139, 250, 0) 55%),
+                    linear-gradient(180deg, #f8fbff 0%, var(--main-bg) 55%, #f3f6fb 100%);
         color: var(--text);
         min-height: 100vh;
         font-size: 13px;
         line-height: 1.5;
+        position: relative;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(600px 300px at 60% 25%, rgba(37, 99, 235, 0.08), rgba(37, 99, 235, 0) 60%);
+        mix-blend-mode: multiply;
+        opacity: 0.8;
       }
       .app { display: flex; min-height: 100vh; }
       .sidebar {
         width: 168px;
-        background: var(--side-bg);
+        background: linear-gradient(180deg, #0b1223 0%, #0f172a 55%, #0b1223 100%);
         color: var(--side-text);
         padding: 16px 0;
         flex-shrink: 0;
         position: relative;
+        box-shadow: 12px 0 40px rgba(2, 8, 23, 0.18);
       }
       .sidebar::before {
         content: "";
@@ -62,6 +83,17 @@
         border-bottom: 1px solid rgba(255,255,255,0.08);
         color: #f8fafc;
       }
+      .sidebar-title::before {
+        content: "";
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        margin-right: 8px;
+        background: radial-gradient(circle at 30% 30%, var(--accent), var(--accent-2));
+        box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.12);
+        vertical-align: middle;
+      }
       .nav-tab {
         display: block;
         width: calc(100% - 8px);
@@ -74,13 +106,25 @@
         font-size: 13px;
         text-align: left;
         cursor: pointer;
-        transition: background 0.2s, color 0.2s;
+        transition: background 0.2s, color 0.2s, transform 0.08s;
+        position: relative;
       }
-      .nav-tab:hover { background: var(--side-hover); color: #f1f5f9; }
+      .nav-tab:hover { background: var(--side-hover); color: #f1f5f9; transform: translateY(-1px); }
       .nav-tab.active {
-        background: rgba(14, 165, 233, 0.15);
-        color: #7dd3fc;
+        background: linear-gradient(90deg, rgba(34, 211, 238, 0.16), rgba(167, 139, 250, 0.10));
+        color: #e0f2fe;
         font-weight: 500;
+      }
+      .nav-tab.active { box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.18); }
+      .nav-tab.active::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 8px;
+        bottom: 8px;
+        width: 3px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, var(--accent), var(--accent-2));
       }
       .sidebar-footer {
         position: absolute;
@@ -91,19 +135,44 @@
         color: #64748b;
         line-height: 1.4;
       }
+      .sidebar-footer a { opacity: 0.95; }
       .main {
         flex: 1;
-        padding: 20px 24px 32px;
+        padding: 22px 28px 40px;
         overflow: auto;
       }
+      /* 更精致的滚动条（Chrome/Edge） */
+      .main::-webkit-scrollbar, .table-wrap::-webkit-scrollbar { height: 10px; width: 10px; }
+      .main::-webkit-scrollbar-thumb, .table-wrap::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.45);
+        border-radius: 999px;
+        border: 3px solid rgba(255,255,255,0.75);
+      }
+      .main::-webkit-scrollbar-track, .table-wrap::-webkit-scrollbar-track { background: rgba(255,255,255,0.35); }
+      /* 页面内容居中且更合理的阅读宽度 */
+      .main > div { width: 100%; max-width: 1480px; margin: 0 auto; }
       .card {
         background: var(--card-bg);
         border-radius: var(--card-radius);
         box-shadow: var(--card-shadow);
         padding: 18px 20px;
         margin-bottom: 18px;
-        border: 1px solid var(--border-light);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.12s ease, box-shadow 0.12s ease;
       }
+      .card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, rgba(34, 211, 238, 0.9), rgba(37, 99, 235, 0.85), rgba(167, 139, 250, 0.85));
+        opacity: 0.7;
+      }
+      .card:hover { transform: translateY(-1px); box-shadow: var(--shadow-soft); }
       .card-title {
         font-size: 16px;
         font-weight: 600;
@@ -118,8 +187,30 @@
         gap: 8px;
         margin-bottom: 12px;
         align-items: center;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        background: linear-gradient(180deg, rgba(255,255,255,0.90) 0%, rgba(248,250,252,0.78) 100%);
+        backdrop-filter: blur(8px);
+        box-shadow: 0 8px 18px rgba(2, 8, 23, 0.05);
       }
       .toolbar label { font-size: 13px; color: var(--text-muted); }
+      .toolbar label,
+      .toolbar > span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 8px;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.7);
+        border: 1px solid rgba(226, 232, 240, 0.7);
+      }
+      .toolbar > span { color: var(--text-muted); }
+      .toolbar button { white-space: nowrap; }
+      /* 工资表工具栏太长时自动分行更舒服 */
+      #pagePayroll .toolbar { align-items: center; }
+      #pagePayroll .toolbar label[style*="margin-left"],
+      #pagePayroll .toolbar span[style*="margin-left"] { margin-left: 0 !important; }
       input, select {
         padding: 6px 10px;
         font-size: 13px;
@@ -129,10 +220,11 @@
         min-width: 100px;
         background: var(--card-bg);
         transition: border-color 0.2s, box-shadow 0.2s;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
       }
       input:focus, select:focus {
         border-color: var(--primary);
-        box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.15);
+        box-shadow: var(--ring);
       }
       button {
         padding: 6px 12px;
@@ -140,26 +232,37 @@
         border-radius: 8px;
         border: none;
         cursor: pointer;
-        transition: background 0.2s, transform 0.05s;
+        transition: background 0.2s, transform 0.05s, box-shadow 0.2s;
       }
       button:active { transform: scale(0.98); }
-      button.primary { background: var(--primary); color: #fff; }
-      button.primary:hover:not(:disabled) { background: var(--primary-hover); }
+      button.primary {
+        background: linear-gradient(135deg, var(--primary), #4f46e5);
+        color: #fff;
+        box-shadow: 0 10px 18px rgba(37, 99, 235, 0.18);
+      }
+      button.primary:hover:not(:disabled) {
+        background: linear-gradient(135deg, var(--primary-hover), #4338ca);
+        box-shadow: 0 12px 22px rgba(37, 99, 235, 0.22);
+      }
       button.secondary {
-        background: var(--table-foot);
+        background: rgba(248, 250, 252, 0.8);
         color: var(--text);
         border: 1px solid var(--border);
       }
-      button.secondary:hover:not(:disabled) { background: #e2e8f0; }
+      button.secondary:hover:not(:disabled) { background: #eef2f7; box-shadow: 0 8px 14px rgba(2, 8, 23, 0.06); }
       button:disabled { opacity: 0.6; cursor: not-allowed; }
       .table-wrap {
         overflow: auto;
         max-height: 58vh;
         border-radius: 10px;
         border: 1px solid var(--border);
-        background: var(--card-bg);
+        background: var(--glass);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 18px rgba(2, 8, 23, 0.05);
       }
       table { width: 100%; border-collapse: collapse; font-size: 12px; }
+      /* 大表格在宽屏上更像“报表”而不是一坨 */
+      #payTable, #historyTable { min-width: 1200px; }
       thead { background: var(--table-head); position: sticky; top: 0; z-index: 1; }
       th {
         padding: 8px 10px;
@@ -169,6 +272,7 @@
         border-bottom: 1px solid var(--border);
         white-space: nowrap;
         font-size: 12px;
+        background: linear-gradient(180deg, #fbfdff 0%, var(--table-head) 100%);
       }
       td {
         padding: 6px 10px;
@@ -177,9 +281,11 @@
       }
       td:first-child, th:first-child { text-align: left; padding-left: 12px; }
       tbody tr { transition: background 0.15s; }
-      tbody tr:hover { background: #f0f9ff; }
-      tbody tr:nth-child(even) { background: #fafbfc; }
-      tbody tr:nth-child(even):hover { background: #e0f2fe; }
+      tbody tr:hover { background: rgba(34, 211, 238, 0.08); }
+      tbody tr:hover td:first-child { box-shadow: inset 3px 0 0 rgba(34, 211, 238, 0.9); }
+      tbody tr:nth-child(even) { background: rgba(248, 250, 252, 0.65); }
+      tbody tr:nth-child(even):hover { background: rgba(37, 99, 235, 0.08); }
+      
       tfoot td {
         font-weight: 600;
         background: var(--table-foot);
@@ -191,7 +297,7 @@
       th.sticky, td.sticky {
         position: sticky;
         left: 0;
-        background: inherit;
+        background: rgba(255,255,255,0.86);
         z-index: 2;
         box-shadow: 2px 0 4px -2px rgba(0,0,0,0.06);
       }
@@ -211,6 +317,38 @@
         color: var(--text-muted);
         margin-top: 10px;
         line-height: 1.5;
+      }
+      .info-bar {
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: var(--card-radius);
+        border: 1px solid rgba(226, 232, 240, 0.85);
+        background: rgba(255,255,255,0.65);
+        box-shadow: 0 8px 18px rgba(2, 8, 23, 0.04);
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .info-bar b { color: #0f172a; }
+      .info-bar .url {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 12px;
+        padding: 6px 10px;
+        border-radius: 10px;
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        background: rgba(248, 250, 252, 0.85);
+        color: #0f172a;
+        overflow: auto;
+        max-width: 100%;
+      }
+      /* 工资表提示行更像“信息条” */
+      #pagePayroll .hint {
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(226, 232, 240, 0.85);
+        background: rgba(255,255,255,0.65);
+        box-shadow: 0 8px 18px rgba(2, 8, 23, 0.04);
       }
       #addRowBtn, #empAddBtn { background: var(--primary); color: #fff; }
       #saveBtn { background: var(--success); color: #fff; }
@@ -239,18 +377,20 @@
         font-size: 13px;
       }
       .cell-readonly { color: var(--text-muted); font-size: 12px; }
-      code { background: var(--border-light); padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+      code { background: rgba(148, 163, 184, 0.18); padding: 2px 6px; border-radius: 6px; font-size: 12px; }
       a { color: var(--primary); text-decoration: none; }
       a:hover { text-decoration: underline; }
       .summary-month-link { color: var(--primary); cursor: pointer; }
       .slip-area { margin-top: 12px; }
       .slip-card {
-        border: 1px solid var(--border);
+        border: 1px solid rgba(226, 232, 240, 0.9);
         border-radius: 8px;
         padding: 12px 16px;
         margin-bottom: 12px;
         break-inside: avoid;
         font-size: 13px;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+        box-shadow: 0 10px 22px rgba(2, 8, 23, 0.06);
       }
       .slip-card h4 { margin: 0 0 8px 0; font-size: 14px; }
       .slip-card table { width: 100%; font-size: 12px; }
@@ -400,12 +540,15 @@
             <label style="display:flex;flex-direction:column;gap:4px">公积金缴费基数 <input id="baseFund" type="number" min="0" step="1" placeholder="2500" /></label>
             <label style="display:flex;flex-direction:column;gap:4px">公积金个人比例(%) <input id="rateFund" type="number" min="0" max="100" step="0.01" placeholder="5" /></label>
           </div>
-          <label style="display:flex;align-items:center;gap:6px">发薪日(每月几日)：<input id="payDayInput" type="number" min="1" max="28" value="15" style="width:56px" /></label>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin:-8px 0 18px 0">
+            <label style="display:flex;flex-direction:column;gap:4px">专项附加扣除合计(每月) <input id="extraDeductionInput" type="number" min="0" step="1" placeholder="5000" /></label>
+            <label style="display:flex;align-items:center;gap:6px">发薪日(每月几日)：<input id="payDayInput" type="number" min="1" max="28" value="15" style="width:56px" /></label>
+          </div>
           <div class="toolbar">
             <button id="basesSaveBtn" class="primary">保存基数与比例</button>
             <button id="basesResetBtn" class="secondary">恢复广州2025下限默认</button>
           </div>
-          <div class="hint" style="margin-top:8px"><strong>请先点击「保存基数与比例」</strong>，保存后再打开工资表，表中的养老/医疗/失业金额会按新基数与比例自动更新。发薪日用于导出与备注（如每月15号发薪）。仅「王淼」缴纳公积金1200元，其他人公积金为0。</div>
+          <div class="hint" style="margin-top:8px"><strong>请先点击「保存基数与比例」</strong>，保存后再打开工资表，表中的养老/医疗/失业金额会按新基数与比例自动更新。专项附加扣除会参与个税计算（默认5000）。发薪日用于导出与备注（如每月15号发薪）。仅「王淼」缴纳公积金1200元，其他人公积金为0。</div>
         </div>
       </div>
 
@@ -478,6 +621,12 @@
             <label>目标月份：<select id="attMonthSelect"><option value="">请选择月份</option></select></label>
             <button id="attImportBtn" type="button" class="primary">从文件导入考勤</button>
             <input id="attImportInput" type="file" accept=".csv,.txt,application/vnd.ms-excel" style="display:none" />
+          </div>
+          <div class="info-bar">
+            <b>考勤链接</b>
+            <a id="attWeComLink" href="https://work.weixin.qq.com/wework_admin/frame#/attendance/record_v2" target="_blank" rel="noopener">打开企业微信考勤</a>
+            <span id="attWeComUrl" class="url">https://work.weixin.qq.com/wework_admin/frame#/attendance/record_v2</span>
+            <button id="attCopyLinkBtn" type="button" class="secondary">复制链接</button>
           </div>
           <div class="hint">
             <strong>推荐步骤：</strong>① 企业微信 PC 端 → 管理后台 → 应用管理 → 打卡 → 导出记录（或「打卡月报」）；② 若导出为 Excel，请另存为 CSV；③ 上方选择要写入的月份后点击「从文件导入考勤」。<br/>
@@ -640,6 +789,7 @@
       const EXPECTED_DAYS_BY_MONTH_KEY = "payrollExpectedDaysByMonth";
       const PAYROLL_PAY_DAY_KEY = "payrollPayDay";
       const ATTENDANCE_IMPORTED_KEY = "payrollAttendanceImported";
+      const EXTRA_DEDUCTION_KEY = "payrollExtraDeduction"; // 专项附加扣除合计（每月）
       // 广州单位参保个人比例（%）参考 https://gz.bendibao.com/gzsi/2016713/si218925.shtml
       const DEFAULT_SOCIAL_BASES = { pension: 5510, medical: 6236, unemp: 2500, fund: 2500 };
       const DEFAULT_SOCIAL_RATES_PCT = { pension: 8, medical: 2, unemp: 0.2, fund: 5 };
@@ -750,6 +900,18 @@
       function setExpectedDays(v) {
         const el = document.getElementById("expectedDaysInput");
         if (el) el.value = v;
+      }
+
+      function getExtraDeduction() {
+        try {
+          const raw = localStorage.getItem(EXTRA_DEDUCTION_KEY);
+          if (raw != null && String(raw).trim() !== "") {
+            const n = parseFloat(raw);
+            if (!isNaN(n) && n >= 0) return n;
+          }
+        } catch (e) {}
+        // 按你提供的工资表统计口径：除5000起征点外，再额外减去专项附加扣除5000
+        return 5000;
       }
 
       function emptyRow() {
@@ -1237,20 +1399,21 @@
         return isNaN(n) ? 0 : n;
       }
 
-      // 个税累进计算（应纳税所得额 = 税前 - 五险一金个人 - 5000，按月度税率表）
+      // 个税累进计算（按你提供的工资表口径：用“年度综合所得税率表”计算）
+      // 应纳税所得额 = 税前 - 五险一金个人 - 5000 - 专项附加扣除
       function calcIncomeTax(taxable) {
         if (taxable <= 0) return 0;
-        const monthlyBrackets = [
-          [3000, 0.03, 0],
-          [12000, 0.10, 210],
-          [25000, 0.20, 1410],
-          [35000, 0.25, 2660],
-          [55000, 0.30, 4410],
-          [80000, 0.35, 7160],
-          [Infinity, 0.45, 15160],
+        const annualBrackets = [
+          [36000, 0.03, 0],
+          [144000, 0.10, 2520],
+          [300000, 0.20, 16920],
+          [420000, 0.25, 31920],
+          [660000, 0.30, 52920],
+          [960000, 0.35, 85920],
+          [Infinity, 0.45, 181920],
         ];
-        for (let i = 0; i < monthlyBrackets.length; i++) {
-          const [limit, rate, deduct] = monthlyBrackets[i];
+        for (let i = 0; i < annualBrackets.length; i++) {
+          const [limit, rate, deduct] = annualBrackets[i];
           if (taxable <= limit) return Math.round((taxable * rate - deduct) * 100) / 100;
         }
         return 0;
@@ -1302,8 +1465,8 @@
         const fund = toNumber(row.fund);
         const other = toNumber(row.other);
 
-        // ⑤ 应纳税所得额 = 税前 - 五险一金个人 - 起征点5000；个税累进计算
-        const taxable = gross - pension - medical - unemp - fund - 5000;
+        // ⑤ 应纳税所得额 = 税前 - 五险一金个人 - 起征点5000 - 专项附加扣除；个税累进计算
+        const taxable = gross - pension - medical - unemp - fund - 5000 - getExtraDeduction();
         const tax = calcIncomeTax(taxable);
         row.tax = tax > 0 ? tax.toFixed(2) : "";
 
@@ -1975,6 +2138,7 @@
           expectedDays: localStorage.getItem(EXPECTED_DAYS_KEY),
           expectedDaysByMonth: localStorage.getItem(EXPECTED_DAYS_BY_MONTH_KEY),
           payDay: localStorage.getItem(PAYROLL_PAY_DAY_KEY),
+          extraDeduction: localStorage.getItem(EXTRA_DEDUCTION_KEY),
           monthNotes: localStorage.getItem(PAYROLL_MONTH_NOTES),
           attendanceImported: localStorage.getItem(ATTENDANCE_IMPORTED_KEY),
           _version: 1,
@@ -1989,6 +2153,7 @@
         if (data.expectedDays != null) localStorage.setItem(EXPECTED_DAYS_KEY, data.expectedDays);
         if (data.expectedDaysByMonth != null) localStorage.setItem(EXPECTED_DAYS_BY_MONTH_KEY, data.expectedDaysByMonth);
         if (data.payDay != null) localStorage.setItem(PAYROLL_PAY_DAY_KEY, data.payDay);
+        if (data.extraDeduction != null) localStorage.setItem(EXTRA_DEDUCTION_KEY, data.extraDeduction);
         if (data.monthNotes != null) localStorage.setItem(PAYROLL_MONTH_NOTES, data.monthNotes);
         if (data.attendanceImported != null) localStorage.setItem(ATTENDANCE_IMPORTED_KEY, data.attendanceImported);
       }
@@ -2158,6 +2323,10 @@
           var payDay = localStorage.getItem(PAYROLL_PAY_DAY_KEY);
           set("payDayInput", payDay ? payDay : "15");
         } catch (e) { set("payDayInput", "15"); }
+        try {
+          var ex = localStorage.getItem(EXTRA_DEDUCTION_KEY);
+          set("extraDeductionInput", ex != null && String(ex).trim() !== "" ? ex : String(getExtraDeduction()));
+        } catch (e) { set("extraDeductionInput", String(getExtraDeduction())); }
       }
 
       (function init() {
@@ -2229,6 +2398,36 @@
           this.value = "";
           if (!f) return;
           importAttendanceFromFile(f);
+        };
+        document.getElementById("attCopyLinkBtn").onclick = function () {
+          var url = "https://work.weixin.qq.com/wework_admin/frame#/attendance/record_v2";
+          try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(url).then(function () {
+                showToast("已复制考勤链接");
+              }).catch(function () {
+                fallbackCopy(url);
+              });
+              return;
+            }
+          } catch (e) {}
+          fallbackCopy(url);
+          function fallbackCopy(text) {
+            try {
+              var ta = document.createElement("textarea");
+              ta.value = text;
+              ta.setAttribute("readonly", "");
+              ta.style.position = "fixed";
+              ta.style.left = "-9999px";
+              document.body.appendChild(ta);
+              ta.select();
+              document.execCommand("copy");
+              document.body.removeChild(ta);
+              showToast("已复制考勤链接");
+            } catch (e) {
+              showToast("复制失败，请手动复制");
+            }
+          }
         };
         document.getElementById("slipMonthSelect").addEventListener("change", function () { renderSlipCards(this.value); });
         document.getElementById("slipPersonSelect").addEventListener("change", function () { renderSlipCards(document.getElementById("slipMonthSelect").value); });
@@ -2413,6 +2612,11 @@
           if (payDayEl) {
             var pd = parseInt(payDayEl.value, 10);
             if (pd >= 1 && pd <= 28) localStorage.setItem(PAYROLL_PAY_DAY_KEY, String(pd));
+          }
+          var extraEl = document.getElementById("extraDeductionInput");
+          if (extraEl) {
+            var ex = parseFloat(extraEl.value);
+            if (!isNaN(ex) && ex >= 0) localStorage.setItem(EXTRA_DEDUCTION_KEY, String(ex));
           }
           try {
             localStorage.setItem(SOCIAL_BASE_KEY, JSON.stringify(b));
