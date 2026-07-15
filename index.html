@@ -15,15 +15,12 @@
   <script>
   (async()=>{
     try{
-      const read=async path=>{const r=await fetch(path,{cache:"no-store"});if(!r.ok)throw new Error(`加载 ${path} 失败`);return r.text()};
-      const files=['payload/00.b64', 'payload/01.b64', 'payload/02.b64', 'payload/030', 'payload/031', 'payload/040', 'payload/041', 'payload/050', 'payload/051', 'payload/060', 'payload/061'];
-      const parts=await Promise.all(files.map(read));
-      const binary=atob(parts.join("").replace(/\s/g,""));
-      const bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
-      if(!("DecompressionStream" in window))throw new Error("当前浏览器版本过低，请使用最新版 Chrome、Edge 或 Safari");
-      const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
-      const page=await new Response(stream).text();
-      document.open();document.write(page);document.close();
+      const files=['v5/00.b64','v5/01.b64','v5/02_03.b64','v5/04_05.b64','v5/06_11.b64'];
+      const parts=await Promise.all(files.map(path=>fetch(path,{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error(`加载 ${path} 失败`);return r.text()})));
+      const bytes=Uint8Array.from(atob(parts.join('').replace(/\s/g,'')),c=>c.charCodeAt(0));
+      if(!('DecompressionStream' in window))throw new Error('当前浏览器版本过低，请使用最新版 Chrome、Edge 或 Safari');
+      const html=await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+      document.open();document.write(html);document.close();
     }catch(error){
       document.body.innerHTML=`<div style="font-family:system-ui;padding:32px;line-height:1.7"><h2>网站加载失败</h2><p>${String(error&&error.message||error)}</p><p>请刷新页面，或使用最新版 Chrome / Edge 浏览器。</p></div>`;
     }
