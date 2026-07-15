@@ -1,1 +1,0 @@
-Salary structure update: fixed base salary plus performance salary equals total basic salary.
