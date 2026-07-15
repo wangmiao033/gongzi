@@ -20,48 +20,8 @@
       const bytes=Uint8Array.from(atob(parts.join('').replace(/\s/g,'')),c=>c.charCodeAt(0));
       if(!('DecompressionStream' in window))throw new Error('当前浏览器版本过低，请使用最新版 Chrome、Edge 或 Safari');
       const html=await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
-      const patch=String.raw`<style>
-.status-switch{border:0;cursor:pointer;font:inherit;transition:transform .12s ease,box-shadow .12s ease}
-.status-switch:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(15,23,42,.12)}
-</style><script>
-(()=>{
-  const KEY='payroll_attendance_system_v1';
-  const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){return {}}};
-  const write=s=>localStorage.setItem(KEY,JSON.stringify(s));
-  const defaultRow=s=>({attendanceDays:Number(s.settings&&s.settings.standardDays)||21,leaveDays:0,absentDays:0,lateCount:0,lateMinutes:0,compensation:0,fullAttendanceBonus:null,salaryAdjustment:0,bonus:0,probationSalary:0,birthdayExpense:0,physicalExpense:0,taxSupplement:0,pension:null,medical:null,unemployment:null,housing:null,leaveDeductionOverride:null,latePenaltyOverride:null,tax:null,taxExemptIncome:0,specialAdditionalDeduction:null,otherTaxDeduction:null,taxRelief:0,note:'',actualSalaryOverride:null});
-  function decorate(){
-    const body=document.getElementById('baseSalaryBody'); if(!body)return;
-    const s=read(), employees=Array.isArray(s.employees)?s.employees:[];
-    Array.from(body.querySelectorAll('tr')).forEach((tr,i)=>{
-      const e=employees[i],cell=tr.lastElementChild;if(!e||!cell)return;
-      cell.innerHTML='';
-      const b=document.createElement('button');b.type='button';b.className='badge status-switch '+(e.active?'active':'inactive');b.textContent=e.active?'启用':'停用';b.dataset.statusId=e.id;b.title='点击切换员工状态';
-      const h=document.createElement('div');h.className='help';h.textContent=e.active?'会加入新月份':'不加入后续月份';cell.append(b,h);
-    });
-    const tip=document.querySelector('#baseSalaryView .quick-tip');
-    if(tip)tip.textContent='基础工资通常填 3,000 元，绩效工资填剩余固定工资；两项合计为每月“基本工资”。启用表示在职并自动加入新月份；停用表示不再加入后续月份，历史工资仍保留。点击状态可直接切换。';
-  }
-  document.addEventListener('click',e=>{
-    const b=e.target.closest('[data-status-id]');if(!b)return;
-    const save=document.getElementById('saveBaseSalaryBtn');if(save)save.click();
-    setTimeout(()=>{
-      const s=read(),emp=(s.employees||[]).find(x=>x.id===b.dataset.statusId);if(!emp)return;
-      if(emp.active&&!confirm('确定停用“'+emp.name+'”吗？\n\n停用后不会自动加入后续月份；当前月份和历史工资仍保留。\n如当前月不计薪，请到“工资计算”中点最右侧 × 移出本月。'))return;
-      emp.active=!emp.active;
-      if(emp.active){
-        s.months=s.months||{};const month=s.currentMonth||new Date().toISOString().slice(0,7);
-        s.months[month]=s.months[month]||{standardDays:Number(s.settings&&s.settings.standardDays)||21,salaryMode:(s.settings&&s.settings.salaryMode)||'fixed',rows:{}};
-        s.months[month].rows=s.months[month].rows||{};
-        if(!s.months[month].rows[emp.id])s.months[month].rows[emp.id]=defaultRow(s);
-      }
-      write(s);location.reload();
-    },80);
-  });
-  const body=document.getElementById('baseSalaryBody');if(body)new MutationObserver(decorate).observe(body,{childList:true,subtree:true});
-  decorate();
-})();
-<\/script>`;
-      const patched=html.replace('</body>',patch+'</body>');
+      const addon='<script src="/status-toggle.js?v=20260715-2"></'+'script>';
+      const patched=html.replace('</body>',addon+'</body>');
       document.open();document.write(patched);document.close();
     }catch(error){
       document.body.innerHTML=`<div style="font-family:system-ui;padding:32px;line-height:1.7"><h2>网站加载失败</h2><p>${String(error&&error.message||error)}</p><p>请刷新页面，或使用最新版 Chrome / Edge 浏览器。</p></div>`;
