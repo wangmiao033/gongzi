@@ -16,25 +16,14 @@
   (async()=>{
     try{
       const read=async path=>{const r=await fetch(path,{cache:"no-store"});if(!r.ok)throw new Error(`加载 ${path} 失败`);return r.text()};
-      const b64Files=Array.from({length:5},(_,i)=>`payload/${String(i).padStart(2,"0")}.b64`);
-      const hexFiles=Array.from({length:4},(_,i)=>`payload/${String(i+5).padStart(2,"0")}.hex`);
-      const b64Parts=await Promise.all(b64Files.map(read));
-      const hexParts=await Promise.all(hexFiles.map(read));
-      const arrays=b64Parts.map(text=>Uint8Array.from(atob(text.replace(/\s/g,"")),c=>c.charCodeAt(0)));
-      for(const text of hexParts){
-        const hex=text.replace(/\s/g,"");
-        if(hex.length%2)throw new Error("网站数据不完整");
-        const bytes=new Uint8Array(hex.length/2);
-        for(let i=0;i<bytes.length;i++)bytes[i]=parseInt(hex.slice(i*2,i*2+2),16);
-        arrays.push(bytes);
-      }
-      const total=arrays.reduce((n,a)=>n+a.length,0);
-      const bytes=new Uint8Array(total);let offset=0;
-      for(const a of arrays){bytes.set(a,offset);offset+=a.length}
+      const files=['payload/00.b64', 'payload/01.b64', 'payload/02.b64', 'payload/030', 'payload/031', 'payload/040', 'payload/041', 'payload/050', 'payload/051', 'payload/060', 'payload/061'];
+      const parts=await Promise.all(files.map(read));
+      const binary=atob(parts.join("").replace(/\s/g,""));
+      const bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
       if(!("DecompressionStream" in window))throw new Error("当前浏览器版本过低，请使用最新版 Chrome、Edge 或 Safari");
       const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
-      const html=await new Response(stream).text();
-      document.open();document.write(html);document.close();
+      const page=await new Response(stream).text();
+      document.open();document.write(page);document.close();
     }catch(error){
       document.body.innerHTML=`<div style="font-family:system-ui;padding:32px;line-height:1.7"><h2>网站加载失败</h2><p>${String(error&&error.message||error)}</p><p>请刷新页面，或使用最新版 Chrome / Edge 浏览器。</p></div>`;
     }
