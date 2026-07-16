@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>工资考勤管理系统</title>
   <style>
-    html,body{height:100%;margin:0;font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;background:#f6f8fc;color:#0f172a}
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;background:#f6f8fc;color:#0f172a}
     .loading{height:100%;display:grid;place-items:center}.box{text-align:center;padding:32px}.dot{width:38px;height:38px;margin:0 auto 16px;border:4px solid #dbeafe;border-top-color:#2563eb;border-radius:50%;animation:s .8s linear infinite}@keyframes s{to{transform:rotate(360deg)}}
+    #appFrame{display:block;width:100%;height:100%;border:0;background:#f6f8fc}
   </style>
 </head>
 <body>
@@ -15,15 +16,18 @@
   <script>
   (async()=>{
     try{
-      await import('/bootstrap-payroll.js?v=20260716-1');
+      await import('/bootstrap-payroll.js?v=20260716-2');
       const files=['v5/00.b64','v5/01.b64','v5/02_03.b64','v5/04_05.b64','v5/06_11.b64'];
       const parts=await Promise.all(files.map(path=>fetch(path,{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error(`加载 ${path} 失败`);return r.text()})));
       const bytes=Uint8Array.from(atob(parts.join('').replace(/\s/g,'')),c=>c.charCodeAt(0));
       if(!('DecompressionStream' in window))throw new Error('当前浏览器版本过低，请使用最新版 Chrome、Edge 或 Safari');
       const html=await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
-      const addon='<script src="/status-toggle.js?v=20260716-1"></'+'script>';
-      const patched=html.replace('</body>',addon+'</body>');
-      document.open();document.write(patched);document.close();
+      const addon='<script src="/status-toggle.js?v=20260716-2"></'+'script>';
+      const frame=document.createElement('iframe');
+      frame.id='appFrame';
+      frame.title='工资考勤管理系统';
+      frame.srcdoc=html.replace('</body>',addon+'</body>');
+      document.body.replaceChildren(frame);
     }catch(error){
       document.body.innerHTML=`<div style="font-family:system-ui;padding:32px;line-height:1.7"><h2>网站加载失败</h2><p>${String(error&&error.message||error)}</p><p>请刷新页面，或使用最新版 Chrome / Edge 浏览器。</p></div>`;
     }
