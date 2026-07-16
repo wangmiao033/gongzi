@@ -6,17 +6,20 @@
       return new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
     };
     const get=async(path,label)=>fetch(path,{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error(label+'加载失败');return r.text()});
+    const loadScript=(src,label)=>new Promise((resolve,reject)=>{
+      const script=document.createElement('script');
+      script.src=src;
+      script.onload=resolve;
+      script.onerror=()=>reject(new Error(label+'加载失败'));
+      document.head.appendChild(script);
+    });
+
+    await loadScript('./wangmiao-june-2026.js?v=20260716-9','王淼历史工资');
     document.body.innerHTML=await decode(await get('./body.gz.b64?v=20260716-7','界面'));
     const names=['00','01','02','03','04','05','06','07'];
     const parts=await Promise.all(names.map(n=>get('./app/'+n+'.b64?v=20260716-7','程序')));
     (0,eval)(await decode(parts.join('')));
-    await new Promise((resolve,reject)=>{
-      const script=document.createElement('script');
-      script.src='./history-addon.js?v=20260716-8';
-      script.onload=resolve;
-      script.onerror=()=>reject(new Error('历史工资模块加载失败'));
-      document.body.appendChild(script);
-    });
+    await loadScript('./history-addon.js?v=20260716-8','历史工资模块');
   }catch(error){
     document.body.innerHTML='<div style="padding:32px;font-family:system-ui"><h2>工资系统加载失败</h2><p>'+String(error&&error.message||error)+'</p></div>';
     console.error(error);
