@@ -8,6 +8,7 @@
 
   let currentFilter = '全部公司';
   let selectedSlipCompany = '';
+  let scheduled = false;
 
   function read() {
     try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (error) { return {}; }
@@ -36,7 +37,7 @@
     else toolbar.prepend(wrap);
     $('#historyCompany').addEventListener('change', (event) => {
       currentFilter = event.target.value;
-      decorate();
+      scheduleDecorate();
     });
   }
 
@@ -52,7 +53,9 @@
     }))];
     const options = ['全部公司', ...companies];
     if (!options.includes(currentFilter)) currentFilter = '全部公司';
-    select.innerHTML = options.map((name) => `<option value="${name.replace(/"/g, '&quot;')}" ${name === currentFilter ? 'selected' : ''}>${name}</option>`).join('');
+    const html = options.map((name) => `<option value="${name.replace(/"/g, '&quot;')}" ${name === currentFilter ? 'selected' : ''}>${name}</option>`).join('');
+    if (select.innerHTML !== html) select.innerHTML = html;
+    if (select.value !== currentFilter) select.value = currentFilter;
   }
 
   function ensureCompanyColumn() {
@@ -69,22 +72,21 @@
   }
 
   function decorateRows() {
-    const body = $('#historyDetail');
-    if (!body) return;
     $$('#historyDetail tr').forEach((tr) => {
       const button = tr.querySelector('[data-hslip]');
       if (!button) return;
-      const id = button.dataset.hslip;
-      const company = companyFor(id);
+      const company = companyFor(button.dataset.hslip);
       let cell = tr.querySelector('[data-company-cell]');
       if (!cell) {
         cell = document.createElement('td');
         cell.dataset.companyCell = '1';
         tr.prepend(cell);
       }
-      cell.innerHTML = `<strong>${company}</strong>`;
-      tr.dataset.companyName = company;
-      tr.style.display = currentFilter === '全部公司' || currentFilter === company ? '' : 'none';
+      const html = `<strong>${company}</strong>`;
+      if (cell.innerHTML !== html) cell.innerHTML = html;
+      if (tr.dataset.companyName !== company) tr.dataset.companyName = company;
+      const display = currentFilter === '全部公司' || currentFilter === company ? '' : 'none';
+      if (tr.style.display !== display) tr.style.display = display;
     });
   }
 
@@ -92,30 +94,34 @@
     const foot = $('#historyFoot');
     if (!foot) return;
     const visible = $$('#historyDetail tr').filter((tr) => tr.style.display !== 'none' && tr.querySelector('[data-hslip]'));
+    let html;
     if (!visible.length) {
-      foot.innerHTML = '<tr><td colspan="11" class="empty">该公司在所选月份没有工资记录</td></tr>';
-      return;
+      html = '<tr><td colspan="11" class="empty">该公司在所选月份没有工资记录</td></tr>';
+    } else {
+      const totals = { gross: 0, social: 0, other: 0, tax: 0, net: 0 };
+      visible.forEach((tr) => {
+        const cells = tr.children;
+        totals.gross += moneyValue(cells[5]?.textContent);
+        totals.social += moneyValue(cells[6]?.textContent);
+        totals.other += moneyValue(cells[7]?.textContent);
+        totals.tax += moneyValue(cells[8]?.textContent);
+        totals.net += moneyValue(cells[9]?.textContent);
+      });
+      html = `<tr><td>合计</td><td>${currentFilter}</td><td>${visible.length} 人</td><td colspan="2">-</td><td>¥ ${money(totals.gross)}</td><td>¥ ${money(totals.social)}</td><td>¥ ${money(totals.other)}</td><td>¥ ${money(totals.tax)}</td><td>¥ ${money(totals.net)}</td><td>-</td></tr>`;
     }
-    const totals = { gross: 0, social: 0, other: 0, tax: 0, net: 0 };
-    visible.forEach((tr) => {
-      const cells = tr.children;
-      totals.gross += moneyValue(cells[5]?.textContent);
-      totals.social += moneyValue(cells[6]?.textContent);
-      totals.other += moneyValue(cells[7]?.textContent);
-      totals.tax += moneyValue(cells[8]?.textContent);
-      totals.net += moneyValue(cells[9]?.textContent);
-    });
-    foot.innerHTML = `<tr><td>合计</td><td>${currentFilter === '全部公司' ? '全部公司' : currentFilter}</td><td>${visible.length} 人</td><td colspan="2">-</td><td>¥ ${money(totals.gross)}</td><td>¥ ${money(totals.social)}</td><td>¥ ${money(totals.other)}</td><td>¥ ${money(totals.tax)}</td><td>¥ ${money(totals.net)}</td><td>-</td></tr>`;
+    if (foot.innerHTML !== html) foot.innerHTML = html;
   }
 
   function updateTitle() {
     const title = $('#historyTitle');
     if (!title) return;
     const monthText = $('#historyMonth option:checked')?.textContent || '历史';
-    title.textContent = `${monthText}${currentFilter === '全部公司' ? '' : ` · ${currentFilter}`}工资明细`;
+    const text = `${monthText}${currentFilter === '全部公司' ? '' : ` · ${currentFilter}`}工资明细`;
+    if (title.textContent !== text) title.textContent = text;
   }
 
   function decorate() {
+    scheduled = false;
     if (!$('#historyView')) return;
     ensureFilter();
     updateOptions();
@@ -123,6 +129,12 @@
     decorateRows();
     updateFoot();
     updateTitle();
+  }
+
+  function scheduleDecorate() {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(decorate);
   }
 
   document.addEventListener('click', (event) => {
@@ -139,11 +151,11 @@
   document.addEventListener('change', (event) => {
     if (event.target?.id === 'historyMonth') {
       currentFilter = '全部公司';
-      setTimeout(decorate, 40);
+      setTimeout(scheduleDecorate, 40);
     }
   });
 
-  const observer = new MutationObserver(() => decorate());
+  const observer = new MutationObserver(scheduleDecorate);
   let attempts = 0;
   const timer = setInterval(() => {
     attempts += 1;
@@ -151,7 +163,7 @@
     if (view) {
       clearInterval(timer);
       observer.observe(view, { childList: true, subtree: true });
-      decorate();
+      scheduleDecorate();
     } else if (attempts > 60) {
       clearInterval(timer);
     }
