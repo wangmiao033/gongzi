@@ -22,7 +22,7 @@
     (0,eval)(await decode(parts.join('')));
     await loadScript('./history-addon.js?v=20260716-8','历史工资模块');
     await loadScript('./company-history-addon.js?v=20260716-10','公司工资分类模块');
-    await loadScript('./payroll-archive-addon.js?v=20260720-3','工资归档模块');
+    await loadScript('./payroll-archive-addon.js?v=20260720-4','工资归档模块');
   }catch(error){
     document.body.innerHTML='<div style="padding:32px;font-family:system-ui"><h2>工资系统加载失败</h2><p>'+String(error&&error.message||error)+'</p></div>';
     console.error(error);
