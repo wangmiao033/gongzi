@@ -59,6 +59,7 @@
     sessionStorage.removeItem('payroll_signout_reload_guard');
     await loadScript('./workspace-team.js?v=20260721-8','共享账套与成员权限');
     await window.PayrollWorkspace.initializeBeforeApp();
+    await loadScript('./roster-migration-20260721.js?v=20260721-15','熊动员工及7月工资数据修复');
 
     let initialState={};
     try{initialState=JSON.parse(localStorage.getItem(storageKey)||'{}')}catch(error){}
