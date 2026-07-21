@@ -116,7 +116,7 @@
     await loadScript('./company-history-addon.js?v=20260721-13','熊动历史工资视图');
     await loadScript('./payroll-archive-addon.js?v=20260720-6','工资归档模块');
     await loadScript('./current-company-filter.js?v=20260721-9','当前工资公司筛选模块');
-    await loadScript('./new-payroll-month.js?v=20260721-10','新建工资月份模块');
+    await loadScript('./new-payroll-month.js?v=20260721-14','新建工资月份与完整性校验模块');
     await window.PayrollCloud.mountAfterApp();
     await window.PayrollWorkspace.mountAfterApp();
     await loadScript('./email-otp-addon.js?v=20260721-5','中文登录注册模块');
