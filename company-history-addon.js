@@ -1,61 +1,86 @@
 (() => {
   'use strict';
-  const KEY = 'payroll_attendance_system_v1';
-  const $ = (s, r = document) => r.querySelector(s);
-  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
-  const moneyValue = (text) => Number(String(text || '').replace(/[^0-9.-]/g, '')) || 0;
-  const money = (v) => Number(v || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-  let currentFilter = '全部公司';
-  let selectedSlipCompany = '';
+  const STORAGE_KEY = 'payroll_attendance_system_v1';
+  const TARGET_COMPANY = '广州熊动科技有限公司';
   let scheduled = false;
 
-  function read() {
-    try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (error) { return {}; }
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+
+  function readState() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    } catch (error) {
+      return {};
+    }
   }
 
   function selectedMonth() {
-    return $('#historyMonth')?.value || '';
+    return $('#historyMonth')?.value || readState().currentMonth || '';
   }
 
-  function companyFor(id) {
-    const state = read();
-    const month = selectedMonth();
-    const employee = (state.employees || []).find((item) => item.id === id);
-    const row = state.months?.[month]?.rows?.[id];
-    return row?.companyName || employee?.companyName || '未设置公司';
-  }
-
-  function ensureFilter() {
-    const toolbar = $('#historyView .page-heading .toolbar');
-    if (!toolbar || $('#historyCompany')) return;
-    const wrap = document.createElement('div');
-    wrap.className = 'field-inline';
-    wrap.innerHTML = '<label>所属公司</label><select id="historyCompany"></select>';
-    const monthField = toolbar.querySelector('.field-inline');
-    if (monthField) monthField.insertAdjacentElement('afterend', wrap);
-    else toolbar.prepend(wrap);
-    $('#historyCompany').addEventListener('change', (event) => {
-      currentFilter = event.target.value;
-      scheduleDecorate();
+  function money(value) {
+    return Number(value || 0).toLocaleString('zh-CN', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     });
   }
 
-  function updateOptions() {
-    const select = $('#historyCompany');
-    if (!select) return;
-    const state = read();
-    const month = selectedMonth();
-    const companies = [...new Set(Object.keys(state.months?.[month]?.rows || {}).map((id) => {
-      const employee = (state.employees || []).find((item) => item.id === id);
-      const row = state.months?.[month]?.rows?.[id];
-      return row?.companyName || employee?.companyName || '未设置公司';
-    }))];
-    const options = ['全部公司', ...companies];
-    if (!options.includes(currentFilter)) currentFilter = '全部公司';
-    const html = options.map((name) => `<option value="${name.replace(/"/g, '&quot;')}" ${name === currentFilter ? 'selected' : ''}>${name}</option>`).join('');
-    if (select.innerHTML !== html) select.innerHTML = html;
-    if (select.value !== currentFilter) select.value = currentFilter;
+  function targetArchives(state) {
+    return Object.values(state.payrollArchives || {}).filter((item) => item?.company === TARGET_COMPANY);
+  }
+
+  function companyForEmployee(state, month, employeeId) {
+    const monthRow = state.months?.[month]?.rows?.[employeeId];
+    if (monthRow?.companyName) return monthRow.companyName;
+
+    const archive = state.payrollArchives?.[`${month}::${TARGET_COMPANY}`];
+    if (archive?.rows?.some((row) => row.employeeId === employeeId)) return TARGET_COMPANY;
+
+    const employee = (state.employees || []).find((item) => item.id === employeeId);
+    return employee?.companyName || '未设置公司';
+  }
+
+  function ensureFixedCompanyField() {
+    const toolbar = $('#historyView .page-heading .toolbar');
+    if (!toolbar) return null;
+
+    let select = $('#historyCompany');
+    let wrap = select?.closest('.field-inline');
+
+    if (!select) {
+      wrap = document.createElement('div');
+      wrap.className = 'field-inline history-fixed-company-field';
+      wrap.innerHTML = `<label>所属公司</label><select id="historyCompany" aria-hidden="true"><option value="${TARGET_COMPANY}">${TARGET_COMPANY}</option></select><span class="history-fixed-company-badge">${TARGET_COMPANY}</span>`;
+      const monthField = toolbar.querySelector('.field-inline');
+      if (monthField) monthField.insertAdjacentElement('afterend', wrap);
+      else toolbar.prepend(wrap);
+      select = $('#historyCompany');
+    }
+
+    if (select) {
+      const expected = `<option value="${TARGET_COMPANY}">${TARGET_COMPANY}</option>`;
+      if (select.innerHTML !== expected) select.innerHTML = expected;
+      select.value = TARGET_COMPANY;
+      select.hidden = true;
+      select.setAttribute('aria-hidden', 'true');
+    }
+
+    if (wrap) {
+      wrap.classList.add('history-fixed-company-field');
+      const label = wrap.querySelector('label');
+      if (label) label.textContent = '所属公司';
+      let badge = wrap.querySelector('.history-fixed-company-badge');
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'history-fixed-company-badge';
+        wrap.appendChild(badge);
+      }
+      badge.textContent = TARGET_COMPANY;
+    }
+
+    return select;
   }
 
   function ensureCompanyColumn() {
@@ -71,91 +96,127 @@
     }
   }
 
-  function decorateRows() {
-    $$('#historyDetail tr').forEach((tr) => {
-      const button = tr.querySelector('[data-hslip]');
-      if (!button) return;
-      const company = companyFor(button.dataset.hslip);
-      let cell = tr.querySelector('[data-company-cell]');
+  function filterDetailRows(state, month) {
+    $$('#historyDetail tr').forEach((row) => {
+      const slip = row.querySelector('[data-hslip]');
+      if (!slip) return;
+      const company = companyForEmployee(state, month, slip.dataset.hslip);
+
+      let cell = row.querySelector('[data-company-cell]');
       if (!cell) {
         cell = document.createElement('td');
         cell.dataset.companyCell = '1';
-        tr.prepend(cell);
+        row.prepend(cell);
       }
-      const html = `<strong>${company}</strong>`;
-      if (cell.innerHTML !== html) cell.innerHTML = html;
-      if (tr.dataset.companyName !== company) tr.dataset.companyName = company;
-      const display = currentFilter === '全部公司' || currentFilter === company ? '' : 'none';
-      if (tr.style.display !== display) tr.style.display = display;
+      cell.innerHTML = `<strong>${company}</strong>`;
+      row.dataset.companyName = company;
+      row.style.display = company === TARGET_COMPANY ? '' : 'none';
     });
   }
 
-  function updateFoot() {
-    const foot = $('#historyFoot');
-    if (!foot) return;
-    const visible = $$('#historyDetail tr').filter((tr) => tr.style.display !== 'none' && tr.querySelector('[data-hslip]'));
-    let html;
-    if (!visible.length) {
-      html = '<tr><td colspan="11" class="empty">该公司在所选月份没有工资记录</td></tr>';
-    } else {
-      const totals = { gross: 0, social: 0, other: 0, tax: 0, net: 0 };
-      visible.forEach((tr) => {
-        const cells = tr.children;
-        totals.gross += moneyValue(cells[5]?.textContent);
-        totals.social += moneyValue(cells[6]?.textContent);
-        totals.other += moneyValue(cells[7]?.textContent);
-        totals.tax += moneyValue(cells[8]?.textContent);
-        totals.net += moneyValue(cells[9]?.textContent);
-      });
-      html = `<tr><td>合计</td><td>${currentFilter}</td><td>${visible.length} 人</td><td colspan="2">-</td><td>¥ ${money(totals.gross)}</td><td>¥ ${money(totals.social)}</td><td>¥ ${money(totals.other)}</td><td>¥ ${money(totals.tax)}</td><td>¥ ${money(totals.net)}</td><td>-</td></tr>`;
-    }
-    if (foot.innerHTML !== html) foot.innerHTML = html;
+  function filterMonthlySummary() {
+    $$('#historySummary tr').forEach((row) => {
+      const company = row.cells?.[1]?.textContent?.trim() || '';
+      if (company) row.style.display = company === TARGET_COMPANY ? '' : 'none';
+    });
+  }
+
+  function filterArchiveRecords() {
+    $$('#archiveHistoryContent .archive-record').forEach((record) => {
+      const company = record.querySelector('.archive-record-head strong')?.textContent?.trim() || '';
+      record.style.display = company === TARGET_COMPANY ? '' : 'none';
+    });
+  }
+
+  function updateCards(state) {
+    const archives = targetArchives(state);
+    const months = new Set(archives.map((item) => item.month).filter(Boolean));
+    const totals = archives.reduce((sum, item) => {
+      const value = item.totals || {};
+      sum.gross += Number(value.gross || 0);
+      sum.deduction += Number(value.social || 0) + Number(value.housing || 0) + Number(value.otherDeductions || 0) + Number(value.tax || 0);
+      sum.net += Number(value.net || 0);
+      return sum;
+    }, { gross: 0, deduction: 0, net: 0 });
+
+    const cards = $$('#historyView .metric-card, #historyView .card');
+    const setCard = (labelText, value) => {
+      const card = cards.find((item) => item.querySelector('.metric-label')?.textContent.includes(labelText));
+      const valueElement = card?.querySelector('.metric-value');
+      if (valueElement) valueElement.textContent = value;
+    };
+
+    setCard('已保存月份', String(months.size));
+    setCard('累计税前工资', money(totals.gross));
+    setCard('累计扣除与个税', money(totals.deduction));
+    setCard('累计实发工资', money(totals.net));
   }
 
   function updateTitle() {
     const title = $('#historyTitle');
     if (!title) return;
-    const monthText = $('#historyMonth option:checked')?.textContent || '历史';
-    const text = `${monthText}${currentFilter === '全部公司' ? '' : ` · ${currentFilter}`}工资明细`;
-    if (title.textContent !== text) title.textContent = text;
+    const monthText = $('#historyMonth option:checked')?.textContent || selectedMonth() || '历史';
+    title.textContent = `${monthText} · ${TARGET_COMPANY}工资明细`;
   }
 
-  function decorate() {
+  function installStyles() {
+    if ($('#history-fixed-company-style')) return;
+    const style = document.createElement('style');
+    style.id = 'history-fixed-company-style';
+    style.textContent = `
+      .history-fixed-company-field{gap:8px}
+      .history-fixed-company-badge{display:inline-flex;align-items:center;min-height:36px;padding:7px 12px;border:1px solid #b8dbe4;border-radius:9px;background:#eef7f8;color:#155e70;font-weight:700;white-space:nowrap}
+    `;
+    document.head.appendChild(style);
+  }
+
+  function apply() {
     scheduled = false;
     if (!$('#historyView')) return;
-    ensureFilter();
-    updateOptions();
+
+    installStyles();
+    ensureFixedCompanyField();
+
+    const state = readState();
+    const month = selectedMonth();
     ensureCompanyColumn();
-    decorateRows();
-    updateFoot();
+    filterDetailRows(state, month);
+    filterMonthlySummary();
+    filterArchiveRecords();
+    updateCards(state);
     updateTitle();
   }
 
-  function scheduleDecorate() {
+  function scheduleApply(delay = 0) {
+    if (delay) {
+      setTimeout(scheduleApply, delay);
+      return;
+    }
     if (scheduled) return;
     scheduled = true;
-    requestAnimationFrame(decorate);
+    requestAnimationFrame(apply);
   }
+
+  document.addEventListener('change', (event) => {
+    if (event.target?.id === 'historyMonth' || event.target?.id === 'historyStatus') {
+      [30, 120, 350].forEach(scheduleApply);
+    }
+  });
 
   document.addEventListener('click', (event) => {
     const slip = event.target.closest('[data-hslip]');
     if (slip) {
-      selectedSlipCompany = companyFor(slip.dataset.hslip);
       setTimeout(() => {
         const title = $('#slipModal .slip-title');
-        if (title && selectedSlipCompany) title.textContent = selectedSlipCompany;
+        if (title) title.textContent = TARGET_COMPANY;
       }, 30);
+    }
+    if (event.target.closest('.nav-btn,[data-view],[data-hmonth]')) {
+      [80, 250, 600].forEach(scheduleApply);
     }
   }, true);
 
-  document.addEventListener('change', (event) => {
-    if (event.target?.id === 'historyMonth') {
-      currentFilter = '全部公司';
-      setTimeout(scheduleDecorate, 40);
-    }
-  });
-
-  const observer = new MutationObserver(scheduleDecorate);
+  const observer = new MutationObserver(() => scheduleApply());
   let attempts = 0;
   const timer = setInterval(() => {
     attempts += 1;
@@ -163,8 +224,8 @@
     if (view) {
       clearInterval(timer);
       observer.observe(view, { childList: true, subtree: true });
-      scheduleDecorate();
-    } else if (attempts > 60) {
+      scheduleApply();
+    } else if (attempts > 100) {
       clearInterval(timer);
     }
   }, 100);
