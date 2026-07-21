@@ -113,7 +113,7 @@
     }
 
     await loadScript('./history-addon.js?v=20260716-8','历史工资模块');
-    await loadScript('./company-history-addon.js?v=20260716-10','公司工资分类模块');
+    await loadScript('./company-history-addon.js?v=20260721-13','熊动历史工资视图');
     await loadScript('./payroll-archive-addon.js?v=20260720-6','工资归档模块');
     await loadScript('./current-company-filter.js?v=20260721-9','当前工资公司筛选模块');
     await loadScript('./new-payroll-month.js?v=20260721-10','新建工资月份模块');
