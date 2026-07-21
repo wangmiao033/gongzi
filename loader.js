@@ -14,6 +14,7 @@
       document.head.appendChild(script);
     });
     const showSecureShell=()=>{
+      document.documentElement.removeAttribute('data-payroll-app-loaded');
       document.body.innerHTML=`
         <main style="min-height:100vh;display:grid;place-items:center;background:linear-gradient(145deg,#eef6f8,#f8fafc);font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#334155">
           <div style="text-align:center;padding:32px">
@@ -35,6 +36,15 @@
     await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js','云端数据库组件');
     await loadScript('./cloud-sync.js?v=20260721-1','云端同步组件');
     await window.PayrollCloud.initializeBeforeApp();
+
+    const authClient=window.PayrollCloud.getClient?.();
+    authClient?.auth.onAuthStateChange((event,session)=>{
+      const appVisible=document.documentElement.getAttribute('data-payroll-app-loaded')==='1';
+      if(appVisible&&(event==='SIGNED_OUT'||!session)){
+        showSecureShell();
+        setTimeout(()=>location.replace(location.origin+'/'),0);
+      }
+    });
 
     const currentUser=window.PayrollCloud.getUser?.();
 
@@ -60,6 +70,7 @@
     }
 
     document.body.innerHTML=await decode(await get('./body.gz.b64?v=20260716-7','界面'));
+    document.documentElement.setAttribute('data-payroll-app-loaded','1');
     const names=['00','01','02','03','04','05','06','07'];
     const parts=await Promise.all(names.map(n=>get('./app/'+n+'.b64?v=20260716-7','程序')));
     let core=await decode(parts.join(''));
@@ -88,6 +99,7 @@
     await window.PayrollCloud.mountAfterApp();
     await loadScript('./email-otp-addon.js?v=20260721-5','中文登录注册模块');
   }catch(error){
+    document.documentElement.removeAttribute('data-payroll-app-loaded');
     document.body.innerHTML='<div style="padding:32px;font-family:system-ui"><h2>工资系统加载失败</h2><p>'+String(error&&error.message||error)+'</p></div>';
     console.error(error);
   }
