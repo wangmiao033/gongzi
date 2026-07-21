@@ -25,12 +25,9 @@
         </main>`;
     };
 
-    // 必须在 Supabase 处理并清理 URL 之前记录密码重置状态。
     const query=new URLSearchParams(location.search);
     const hash=new URLSearchParams(location.hash.replace(/^#/,''));
     const recoveryMode=query.get('mode')==='recovery'||hash.get('type')==='recovery';
-
-    // 默认先显示安全占位页，任何工资数据都不会在登录校验前渲染。
     showSecureShell();
 
     await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js','云端数据库组件');
@@ -47,14 +44,15 @@
     });
 
     const currentUser=window.PayrollCloud.getUser?.();
-
-    // 未登录或正在进行密码重置时，只挂载身份验证界面，禁止启动工资主程序。
     if(!currentUser||recoveryMode){
       showSecureShell();
       await window.PayrollCloud.mountAfterApp();
       await loadScript('./email-otp-addon.js?v=20260721-5','中文登录注册模块');
       return;
     }
+
+    await loadScript('./workspace-team.js?v=20260721-8','共享账套与成员权限');
+    await window.PayrollWorkspace.initializeBeforeApp();
 
     const storageKey='payroll_attendance_system_v1';
     let initialState={};
@@ -89,6 +87,7 @@
         localStorage.setItem(storageKey,JSON.stringify(restored));
       }catch(error){}
       await window.PayrollCloud.saveNow({force:true});
+      await window.PayrollWorkspace.saveNow({force:true});
       location.replace(location.href);
       return;
     }
@@ -97,6 +96,7 @@
     await loadScript('./company-history-addon.js?v=20260716-10','公司工资分类模块');
     await loadScript('./payroll-archive-addon.js?v=20260720-6','工资归档模块');
     await window.PayrollCloud.mountAfterApp();
+    await window.PayrollWorkspace.mountAfterApp();
     await loadScript('./email-otp-addon.js?v=20260721-5','中文登录注册模块');
   }catch(error){
     document.documentElement.removeAttribute('data-payroll-app-loaded');
