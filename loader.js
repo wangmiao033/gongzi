@@ -14,6 +14,10 @@
       document.head.appendChild(script);
     });
 
+    await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js','云端数据库组件');
+    await loadScript('./cloud-sync.js?v=20260721-1','云端同步组件');
+    await window.PayrollCloud.initializeBeforeApp();
+
     const storageKey='payroll_attendance_system_v1';
     let initialState={};
     try{initialState=JSON.parse(localStorage.getItem(storageKey)||'{}')}catch(error){}
@@ -43,12 +47,14 @@
         if(Array.isArray(preservedCorrections))restored.payrollCorrections=preservedCorrections;
         localStorage.setItem(storageKey,JSON.stringify(restored));
       }catch(error){}
+      await window.PayrollCloud.saveNow({force:true});
       location.replace(location.href);
       return;
     }
     await loadScript('./history-addon.js?v=20260716-8','历史工资模块');
     await loadScript('./company-history-addon.js?v=20260716-10','公司工资分类模块');
     await loadScript('./payroll-archive-addon.js?v=20260720-6','工资归档模块');
+    await window.PayrollCloud.mountAfterApp();
   }catch(error){
     document.body.innerHTML='<div style="padding:32px;font-family:system-ui"><h2>工资系统加载失败</h2><p>'+String(error&&error.message||error)+'</p></div>';
     console.error(error);
