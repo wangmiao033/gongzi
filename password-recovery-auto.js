@@ -8,7 +8,7 @@
       document.head.appendChild(script);
     });
 
-    await load('./password-recovery-addon.js?v=20260721-4');
+    await load('./password-recovery-addon.js?v=20260721-5');
     await window.PayrollPasswordRecovery.prepareBeforeApp();
 
     let attempts=0;
