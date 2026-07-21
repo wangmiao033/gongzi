@@ -8,6 +8,26 @@
   const query = () => new URLSearchParams(location.search);
   const hash = () => new URLSearchParams(location.hash.replace(/^#/, ''));
 
+  function friendlyError(error) {
+    const raw = String(error?.message || error || '').trim();
+    const text = raw.toLowerCase();
+    console.error('[工资系统·密码重置]', error);
+    if (text.includes('email rate limit exceeded') || text.includes('rate limit')) {
+      return '重置邮件发送次数已达上限，请等待一段时间后再试。';
+    }
+    if (text.includes('expired') || text.includes('invalid') || text.includes('session')) {
+      return '重置链接无效或已过期，请返回登录页重新申请。';
+    }
+    if (text.includes('same password')) return '新密码不能与原密码相同。';
+    if (text.includes('password should be at least') || text.includes('weak password')) {
+      return '密码强度不足，请设置至少 8 位并包含字母和数字的密码。';
+    }
+    if (text.includes('network') || text.includes('fetch failed') || text.includes('failed to fetch')) {
+      return '网络连接失败，请检查网络后重试。';
+    }
+    return '操作失败，请稍后重试。';
+  }
+
   function detectRecoveryRequest() {
     const q = query();
     const h = hash();
@@ -37,8 +57,9 @@
       .payroll-recovery-card h2{margin:0 0 8px;font-size:24px}.payroll-recovery-card p{margin:0 0 20px;color:#64748b;line-height:1.65}
       .payroll-recovery-field{display:grid;gap:7px;margin-bottom:14px}.payroll-recovery-field label{font-weight:600;font-size:14px}.payroll-recovery-field input{height:44px;border:1px solid #cbd5e1;border-radius:10px;padding:0 12px;font:inherit;outline:none}.payroll-recovery-field input:focus{border-color:#0f7c91;box-shadow:0 0 0 3px rgba(15,124,145,.12)}
       .payroll-recovery-actions{display:flex;gap:10px;margin-top:18px}.payroll-recovery-primary{flex:1;height:44px;border:0;border-radius:10px;background:#0f7c91;color:#fff;font:inherit;font-weight:700;cursor:pointer}.payroll-recovery-secondary{height:44px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#334155;padding:0 15px;font:inherit;cursor:pointer}
-      .payroll-recovery-message{min-height:22px;margin-top:14px;font-size:13px;color:#dc2626}.payroll-recovery-message.ok{color:#15803d}
+      .payroll-recovery-message{min-height:22px;margin-top:14px;font-size:13px;color:#dc2626;line-height:1.55}.payroll-recovery-message.ok{color:#15803d}
       .payroll-recovery-note{margin-top:18px;padding:12px 14px;border-radius:10px;background:#f0f9ff;color:#475569;font-size:13px;line-height:1.55}
+      .payroll-recovery-primary:disabled{opacity:.58;cursor:not-allowed}
     `;
     document.head.appendChild(style);
   }
@@ -52,9 +73,7 @@
         clearInterval(timer);
         message.textContent = text;
         message.classList.toggle('ok', ok);
-      } else if (attempts > 80) {
-        clearInterval(timer);
-      }
+      } else if (attempts > 100) clearInterval(timer);
     }, 100);
   }
 
@@ -68,15 +87,15 @@
       <div class="payroll-recovery-card" role="dialog" aria-modal="true" aria-labelledby="payrollRecoveryTitle">
         <div class="payroll-recovery-logo">薪</div>
         <h2 id="payrollRecoveryTitle">设置新密码</h2>
-        <p>请输入新的登录密码。修改成功后，需要使用新密码重新登录工资管理系统。</p>
-        <div class="payroll-recovery-field"><label for="payrollNewPassword">新密码</label><input id="payrollNewPassword" type="password" autocomplete="new-password" placeholder="至少 8 位密码"></div>
+        <p>请输入新的登录密码。修改完成后，原密码会立即失效。</p>
+        <div class="payroll-recovery-field"><label for="payrollNewPassword">新密码</label><input id="payrollNewPassword" type="password" autocomplete="new-password" placeholder="至少 8 位，建议包含字母和数字"></div>
         <div class="payroll-recovery-field"><label for="payrollNewPasswordConfirm">确认新密码</label><input id="payrollNewPasswordConfirm" type="password" autocomplete="new-password" placeholder="请再次输入新密码"></div>
         <div class="payroll-recovery-actions">
           <button type="button" class="payroll-recovery-primary" id="payrollUpdatePassword">确认修改密码</button>
           <button type="button" class="payroll-recovery-secondary" id="payrollCancelRecovery">返回登录</button>
         </div>
         <div class="payroll-recovery-message" id="payrollRecoveryMessage"></div>
-        <div class="payroll-recovery-note">密码修改完成后，原密码立即失效。请勿将重置邮件转发给他人。</div>
+        <div class="payroll-recovery-note">为了工资数据安全，请勿将重置邮件或链接转发给他人。</div>
       </div>
     `;
     document.body.appendChild(overlay);
@@ -86,7 +105,6 @@
     const submit = overlay.querySelector('#payrollUpdatePassword');
     const cancel = overlay.querySelector('#payrollCancelRecovery');
     const message = overlay.querySelector('#payrollRecoveryMessage');
-
     const setMessage = (text, ok = false) => {
       message.textContent = text;
       message.classList.toggle('ok', ok);
@@ -114,8 +132,7 @@
         setTimeout(() => location.replace(`${location.origin}/?password-reset=success`), 700);
       } catch (error) {
         submit.disabled = false;
-        const raw = String(error?.message || error);
-        setMessage(raw.includes('session') || raw.includes('expired') ? '重置链接已失效，请重新申请密码重置邮件。' : raw);
+        setMessage(friendlyError(error));
       }
     });
 
@@ -157,12 +174,12 @@
         });
         if (error) throw error;
         if (message) {
-          message.textContent = '重置邮件已发送。请点击邮件中的“Reset Password”设置新密码。';
+          message.textContent = '重置邮件已发送，请打开邮件并点击“重置密码”链接。';
           message.classList.add('ok');
         }
       } catch (error) {
         if (message) {
-          message.textContent = String(error?.message || error);
+          message.textContent = friendlyError(error);
           message.classList.remove('ok');
         }
       } finally {
@@ -189,9 +206,7 @@
       return;
     }
 
-    if (recoveryRequested) {
-      showRecoveryOverlay(client);
-    }
+    if (recoveryRequested) showRecoveryOverlay(client);
   }
 
   window.PayrollPasswordRecovery = { prepareBeforeApp, mountAfterApp };
