@@ -13,10 +13,38 @@
       script.onerror=()=>reject(new Error(label+'加载失败'));
       document.head.appendChild(script);
     });
+    const showSecureShell=()=>{
+      document.body.innerHTML=`
+        <main style="min-height:100vh;display:grid;place-items:center;background:linear-gradient(145deg,#eef6f8,#f8fafc);font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#334155">
+          <div style="text-align:center;padding:32px">
+            <div style="width:54px;height:54px;margin:0 auto 16px;border-radius:16px;display:grid;place-items:center;background:#0f879c;color:#fff;font-size:25px;font-weight:700;box-shadow:0 14px 34px rgba(15,135,156,.2)">薪</div>
+            <div style="font-size:18px;font-weight:700;color:#0f172a">工资数据受登录保护</div>
+            <div style="margin-top:8px;font-size:13px;color:#64748b">正在验证登录状态…</div>
+          </div>
+        </main>`;
+    };
+
+    // 必须在 Supabase 处理并清理 URL 之前记录密码重置状态。
+    const query=new URLSearchParams(location.search);
+    const hash=new URLSearchParams(location.hash.replace(/^#/,''));
+    const recoveryMode=query.get('mode')==='recovery'||hash.get('type')==='recovery';
+
+    // 默认先显示安全占位页，任何工资数据都不会在登录校验前渲染。
+    showSecureShell();
 
     await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js','云端数据库组件');
     await loadScript('./cloud-sync.js?v=20260721-1','云端同步组件');
     await window.PayrollCloud.initializeBeforeApp();
+
+    const currentUser=window.PayrollCloud.getUser?.();
+
+    // 未登录或正在进行密码重置时，只挂载身份验证界面，禁止启动工资主程序。
+    if(!currentUser||recoveryMode){
+      showSecureShell();
+      await window.PayrollCloud.mountAfterApp();
+      await loadScript('./email-otp-addon.js?v=20260721-5','中文登录注册模块');
+      return;
+    }
 
     const storageKey='payroll_attendance_system_v1';
     let initialState={};
@@ -30,6 +58,7 @@
       await loadScript('./wangmiao-june-2026.js?v=20260716-10','王淼历史工资');
       await loadScript('./finance-june-2026-correction.js?v=20260716-10','财务最终工资数据');
     }
+
     document.body.innerHTML=await decode(await get('./body.gz.b64?v=20260716-7','界面'));
     const names=['00','01','02','03','04','05','06','07'];
     const parts=await Promise.all(names.map(n=>get('./app/'+n+'.b64?v=20260716-7','程序')));
@@ -38,6 +67,7 @@
     core=core.replace("const round2 = v => Math.round((num(v) + Number.EPSILON) * 100) / 100;", "const round2 = v => Math.round((num(v) + Number.EPSILON) * 100) / 100;\n  state = loadState();");
     core=core.replace('if (!raw) return clone(seedData);',"if (!raw) { localStorage.setItem(STORAGE_KEY, JSON.stringify(seedData)); return clone(seedData); }");
     (0,eval)(core);
+
     if(needsBootstrap){
       await loadScript('./wangmiao-june-2026.js?v=20260716-10','王淼历史工资');
       await loadScript('./finance-june-2026-correction.js?v=20260716-10','财务最终工资数据');
@@ -51,6 +81,7 @@
       location.replace(location.href);
       return;
     }
+
     await loadScript('./history-addon.js?v=20260716-8','历史工资模块');
     await loadScript('./company-history-addon.js?v=20260716-10','公司工资分类模块');
     await loadScript('./payroll-archive-addon.js?v=20260720-6','工资归档模块');
