@@ -55,7 +55,7 @@
     await loadScript('./company-history-addon.js?v=20260716-10','公司工资分类模块');
     await loadScript('./payroll-archive-addon.js?v=20260720-6','工资归档模块');
     await window.PayrollCloud.mountAfterApp();
-    await loadScript('./email-otp-addon.js?v=20260721-2','邮箱验证码登录模块');
+    await loadScript('./email-otp-addon.js?v=20260721-3','邮箱验证码与注册模块');
   }catch(error){
     document.body.innerHTML='<div style="padding:32px;font-family:system-ui"><h2>工资系统加载失败</h2><p>'+String(error&&error.message||error)+'</p></div>';
     console.error(error);
