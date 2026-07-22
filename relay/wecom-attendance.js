@@ -90,6 +90,75 @@ async function getRules(accessToken, fetchImpl = fetch) {
   return assertWecomOk(data, '获取打卡规则');
 }
 
+function extractRuleRanges(rules) {
+  const userIds = new Set();
+  const partyIds = new Set();
+  const tagIds = new Set();
+  const groups = Array.isArray(rules?.group) ? rules.group : (Array.isArray(rules?.group_list) ? rules.group_list : []);
+  for (const group of groups) {
+    const range = group?.range || {};
+    for (const value of Array.isArray(range.userid) ? range.userid : []) {
+      const userId = String(value || '').trim();
+      if (userId) userIds.add(userId);
+    }
+    for (const value of Array.isArray(range.party_id) ? range.party_id : []) {
+      const partyId = String(value || '').trim();
+      if (partyId) partyIds.add(partyId);
+    }
+    for (const value of Array.isArray(range.tagid) ? range.tagid : []) {
+      const tagId = String(value || '').trim();
+      if (tagId) tagIds.add(tagId);
+    }
+  }
+  return { userIds: [...userIds], partyIds: [...partyIds], tagIds: [...tagIds] };
+}
+
+async function getDepartmentUsers(accessToken, partyId, fetchImpl = fetch) {
+  const url = new URL(`${WECOM_BASE}/user/simplelist`);
+  url.searchParams.set('access_token', accessToken);
+  url.searchParams.set('department_id', partyId);
+  url.searchParams.set('fetch_child', '1');
+  const data = assertWecomOk(await fetchJson(url, {}, fetchImpl), '获取部门成员');
+  return Array.isArray(data.userlist) ? data.userlist : [];
+}
+
+async function getTagUsers(accessToken, tagId, fetchImpl = fetch) {
+  const url = new URL(`${WECOM_BASE}/tag/get`);
+  url.searchParams.set('access_token', accessToken);
+  url.searchParams.set('tagid', tagId);
+  const data = assertWecomOk(await fetchJson(url, {}, fetchImpl), '获取标签成员');
+  return Array.isArray(data.userlist) ? data.userlist : [];
+}
+
+async function discoverRuleUsers(accessToken, fetchImpl = fetch) {
+  const rules = await getRules(accessToken, fetchImpl);
+  const ranges = extractRuleRanges(rules);
+  const users = new Map(ranges.userIds.map((userId) => [userId, { userId, name: '', source: '打卡规则' }]));
+  const warnings = [];
+
+  for (const partyId of ranges.partyIds) {
+    try {
+      for (const item of await getDepartmentUsers(accessToken, partyId, fetchImpl)) {
+        const userId = String(item?.userid || '').trim();
+        if (userId) users.set(userId, { userId, name: String(item?.name || ''), source: '打卡部门' });
+      }
+    } catch (error) {
+      warnings.push(`部门 ${partyId} 无法展开：${error.message}`);
+    }
+  }
+  for (const tagId of ranges.tagIds) {
+    try {
+      for (const item of await getTagUsers(accessToken, tagId, fetchImpl)) {
+        const userId = String(item?.userid || '').trim();
+        if (userId) users.set(userId, { userId, name: String(item?.name || ''), source: '打卡标签' });
+      }
+    } catch (error) {
+      warnings.push(`标签 ${tagId} 无法展开：${error.message}`);
+    }
+  }
+  return { users: [...users.values()], ranges, warnings };
+}
+
 async function getMonthData(accessToken, month, userIds, dailyWorkHours = 8, fetchImpl = fetch) {
   const { start, end } = monthRange(month);
   const data = await fetchJson(`${WECOM_BASE}/checkin/getcheckin_monthdata?access_token=${encodeURIComponent(accessToken)}`, {
@@ -101,4 +170,15 @@ async function getMonthData(accessToken, month, userIds, dailyWorkHours = 8, fet
   return (data.datas || []).map((record) => normalizeMonthRecord(record, dailyWorkHours));
 }
 
-module.exports = { getAccessToken, getRules, getMonthData, monthRange, normalizeMonthRecord, durationToDays };
+module.exports = {
+  getAccessToken,
+  getRules,
+  getMonthData,
+  discoverRuleUsers,
+  extractRuleRanges,
+  getDepartmentUsers,
+  getTagUsers,
+  monthRange,
+  normalizeMonthRecord,
+  durationToDays
+};

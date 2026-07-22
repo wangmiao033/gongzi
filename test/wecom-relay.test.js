@@ -26,6 +26,7 @@ function testHandler(overrides = {}) {
     api: {
       getAccessToken: async () => 'access-test',
       getRules: async () => ({ group: [{ groupname: '标准班' }] }),
+      discoverRuleUsers: async () => ({ users: [{ userId: 'wangmiao', name: '王淼', source: '打卡规则' }], warnings: [] }),
       getMonthData: async (_token, month, userIds) => userIds.map((userId) => ({ userId, month }))
     },
     ...overrides
@@ -40,6 +41,24 @@ test('health endpoint does not expose secrets', async () => {
       ok: true,
       service: 'gongzi-wecom-relay',
       configured: true
+    });
+  });
+});
+
+test('attendance endpoint discovers rule users and returns matching month records', async () => {
+  await withServer(testHandler(), async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/wecom-attendance`, {
+      method: 'POST',
+      headers: { authorization: 'Bearer relay-test', 'content-type': 'application/json' },
+      body: JSON.stringify({ action: 'discover', month: '2026-07' })
+    });
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), {
+      ok: true,
+      month: '2026-07',
+      records: [{ userId: 'wangmiao', month: '2026-07' }],
+      candidates: [{ userId: 'wangmiao', name: '王淼', source: '打卡规则', hasMonthData: true }],
+      warnings: []
     });
   });
 });

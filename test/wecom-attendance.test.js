@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { monthRange, normalizeMonthRecord } = require('../lib/wecom-attendance');
+const { monthRange, normalizeMonthRecord, extractRuleRanges } = require('../lib/wecom-attendance');
 
 test('monthRange uses Asia/Shanghai month boundaries', () => {
   const range = monthRange('2026-07');
@@ -37,4 +37,15 @@ test('converts hourly leave using an eight-hour workday', () => {
   }, 8);
   assert.equal(result.leaveDays, 0.5);
   assert.equal(result.attendanceDays, 20.5);
+});
+
+test('extracts direct users, departments and tags from attendance rules', () => {
+  assert.deepEqual(extractRuleRanges({ group: [
+    { range: { userid: ['wm', 'gh'], party_id: [2], tagid: [8] } },
+    { range: { userid: ['wm'], party_id: ['3'], tagid: [] } }
+  ] }), {
+    userIds: ['wm', 'gh'],
+    partyIds: ['2', '3'],
+    tagIds: ['8']
+  });
 });

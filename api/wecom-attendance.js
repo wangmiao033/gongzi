@@ -1,6 +1,6 @@
 'use strict';
 
-const { getAccessToken, getRules, getMonthData } = require('../lib/wecom-attendance');
+const { getAccessToken, getRules, getMonthData, discoverRuleUsers } = require('../lib/wecom-attendance');
 const { createFixieFetch } = require('../lib/fixie-fetch');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://bypekqxsnuvqbgvdosdl.supabase.co';
@@ -83,6 +83,23 @@ module.exports = async function handler(req, res) {
     if (action === 'rules') {
       const data = await getRules(token, enterpriseWecomFetch());
       return send(res, 200, { ok: true, rules: data.group || data.group_list || data });
+    }
+    if (action === 'discover') {
+      if (!/^\d{4}-\d{2}$/.test(body.month || '')) throw Object.assign(new Error('请选择有效的工资月份'), { status: 400 });
+      const discovered = await discoverRuleUsers(token, enterpriseWecomFetch());
+      const userIds = discovered.users.map((item) => item.userId).slice(0, 100);
+      if (!userIds.length) {
+        throw Object.assign(new Error('企业微信打卡规则中没有可读取的成员，请确认员工已加入打卡规则'), { status: 422 });
+      }
+      const records = await getMonthData(token, body.month, userIds, Number(body.dailyWorkHours) || 8, enterpriseWecomFetch());
+      const recordById = new Map(records.map((item) => [item.userId, item]));
+      const candidates = discovered.users.slice(0, 100).map((item) => ({
+        userId: item.userId,
+        name: recordById.get(item.userId)?.name || item.name || '',
+        source: item.source,
+        hasMonthData: recordById.has(item.userId)
+      }));
+      return send(res, 200, { ok: true, month: body.month, records, candidates, warnings: discovered.warnings });
     }
     const userIds = [...new Set((body.userIds || []).map((value) => String(value).trim()).filter(Boolean))];
     if (!/^\d{4}-\d{2}$/.test(body.month || '')) throw Object.assign(new Error('请选择有效的工资月份'), { status: 400 });

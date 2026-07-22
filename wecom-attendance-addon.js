@@ -8,6 +8,7 @@
   const esc = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char]));
   const num = (value) => Number(value) || 0;
   const monthLabel = (month) => /^\d{4}-\d{2}$/.test(month || '') ? `${month.slice(0, 4)} 年 ${Number(month.slice(5))} 月` : month;
+  const normalizedName = (value) => String(value || '').trim().toLowerCase().replace(/[\s\-_··—–・•（）()]/g, '');
 
   function save(state) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -26,6 +27,7 @@
       .wecom-summary{display:flex;flex-wrap:wrap;gap:9px;margin:17px 0}.wecom-chip{padding:7px 10px;border-radius:999px;background:#eff8f5;color:#16634b;font-size:12px;font-weight:750}.wecom-chip.warn{background:#fff7ed;color:#9a3412}
       .wecom-table-wrap{overflow:auto;border:1px solid #dce5eb;border-radius:12px}.wecom-table{width:100%;border-collapse:collapse;min-width:840px}.wecom-table th,.wecom-table td{padding:10px 11px;border-bottom:1px solid #e7edf2;text-align:right;white-space:nowrap;font-size:13px}.wecom-table th{background:#f8fafc;color:#475569}.wecom-table th:first-child,.wecom-table td:first-child,.wecom-table th:nth-child(2),.wecom-table td:nth-child(2){text-align:left}.wecom-table tr:last-child td{border-bottom:0}.wecom-missing{color:#b42318;background:#fff8f8}.wecom-note{margin-top:13px;padding:12px 14px;border-radius:10px;background:#f8fafc;color:#64748b;font-size:13px;line-height:1.65}.wecom-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}.wecom-actions button{height:42px;border-radius:9px;padding:0 16px;font:inherit;font-weight:700;cursor:pointer}.wecom-cancel{background:#fff;border:1px solid #cbd5e1}.wecom-confirm{background:#0f879c;color:#fff;border:0}.wecom-confirm:disabled{opacity:.5}.wecom-error{padding:16px;border:1px solid #fecaca;background:#fff1f2;color:#9f1239;border-radius:11px;line-height:1.65}
       .wecom-userid-help{font-size:12px;color:#64748b;margin-top:5px;line-height:1.5}
+      .wecom-map-select{width:100%;min-width:220px;height:38px;border:1px solid #cbd5e1;border-radius:8px;padding:0 9px;background:#fff;color:#0f172a;font:inherit}.wecom-map-select:focus{outline:2px solid rgba(15,135,156,.18);border-color:#0f879c}.wecom-auto{display:inline-block;margin-top:4px;color:#16835b;font-size:11px;font-weight:700}
       .wecom-file-drop{margin:18px 0;border:2px dashed #9accc0;border-radius:14px;background:#f2fbf8;padding:26px;text-align:center}.wecom-file-drop strong{display:block;font-size:17px;color:#145c48;margin-bottom:7px}.wecom-file-drop small{display:block;color:#64748b;line-height:1.6;margin-bottom:15px}.wecom-file-label{display:inline-flex;align-items:center;justify-content:center;height:42px;padding:0 18px;background:#16835b;color:#fff;border-radius:9px;font-weight:750;cursor:pointer}.wecom-file-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
       .wecom-field-input{width:78px;height:34px;border:1px solid #cbd5e1;border-radius:7px;padding:0 7px;text-align:right;font:inherit;color:#0f172a;background:#fff}.wecom-field-input:focus{outline:2px solid rgba(15,135,156,.2);border-color:#0f879c}.wecom-existing{display:block;color:#94a3b8;font-size:10px;margin-top:3px}.wecom-source{color:#64748b;font-size:11px}.wecom-secondary{background:#fff;border:1px solid #cbd5e1;color:#475569}.wecom-fields{margin-top:8px;color:#64748b;font-size:12px;line-height:1.6}
     `;
@@ -94,6 +96,17 @@
     return data;
   }
 
+  async function requestDiscover(month, dailyWorkHours) {
+    const response = await fetch('/api/wecom-attendance', {
+      method: 'POST',
+      headers: await authHeaders(),
+      body: JSON.stringify({ action: 'discover', month, dailyWorkHours })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.ok) throw new Error(data.error || `自动读取失败（HTTP ${response.status}）`);
+    return data;
+  }
+
   function closeModal() { modal?.remove(); modal = null; }
 
   function archiveLocked(state, month, employee) {
@@ -141,6 +154,81 @@
       try { await window.PayrollCloud?.saveNow?.({ force: true }); } catch (_) {}
       closeModal();
       location.reload();
+    };
+  }
+
+  function suggestedCandidate(employee, candidates, used) {
+    const existing = String(employee.wecomUserId || '').trim();
+    if (existing && candidates.some((item) => item.userId === existing)) return existing;
+    const employeeName = normalizedName(employee.name);
+    if (!employeeName) return '';
+    const exact = candidates.filter((item) => normalizedName(item.name) === employeeName && !used.has(item.userId));
+    if (exact.length === 1) return exact[0].userId;
+    const partial = candidates.filter((item) => {
+      const candidateName = normalizedName(item.name);
+      return candidateName && !used.has(item.userId) && (candidateName.endsWith(employeeName) || employeeName.endsWith(candidateName));
+    });
+    return partial.length === 1 ? partial[0].userId : '';
+  }
+
+  function renderMappingPreview(state, month, employees, response) {
+    const candidates = [...(response.candidates || [])];
+    for (const employee of employees) {
+      const userId = String(employee.wecomUserId || '').trim();
+      if (userId && !candidates.some((item) => item.userId === userId)) {
+        candidates.push({ userId, name: '', source: '已保存映射', hasMonthData: false });
+      }
+    }
+    const used = new Set();
+    const suggestions = new Map();
+    for (const employee of employees) {
+      const value = suggestedCandidate(employee, candidates, used);
+      if (value) { suggestions.set(employee.id, value); used.add(value); }
+    }
+    const autoCount = suggestions.size;
+    modal.innerHTML = `<div class="wecom-card" role="dialog" aria-modal="true">
+      <div class="wecom-head"><div><h2>自动匹配企业微信员工</h2><p>${esc(monthLabel(month))} · 已从打卡规则读取 ${candidates.length} 个账号</p></div><button class="wecom-close">×</button></div>
+      <div class="wecom-summary"><span class="wecom-chip">自动匹配 ${autoCount} 人</span><span class="wecom-chip ${autoCount < employees.length ? 'warn' : ''}">待确认 ${employees.length - autoCount} 人</span></div>
+      <div class="wecom-table-wrap"><table class="wecom-table"><thead><tr><th>工资员工</th><th>企业微信账号</th><th>当月数据</th></tr></thead><tbody>
+        ${employees.map((employee) => {
+          const selected = suggestions.get(employee.id) || '';
+          return `<tr><td><strong>${esc(employee.name)}</strong>${selected ? '<br><span class="wecom-auto">已按姓名自动匹配</span>' : ''}</td><td><select class="wecom-map-select" data-wecom-map="${esc(employee.id)}"><option value="">— 不导入该员工 —</option>${candidates.map((item) => `<option value="${esc(item.userId)}" ${item.userId === selected ? 'selected' : ''}>${esc(item.name || '未返回姓名')} · ${esc(item.userId)}</option>`).join('')}</select></td><td>${selected && candidates.find((item) => item.userId === selected)?.hasMonthData ? '已读取' : '确认后读取'}</td></tr>`;
+        }).join('')}
+      </tbody></table></div>
+      ${response.warnings?.length ? `<div class="wecom-note">部分规则提示：${esc(response.warnings.join('；'))}</div>` : ''}
+      <div class="wecom-note">系统只保存你确认的 UserID 映射，不会在此步修改工资。下一步还会显示出勤、请假、旷工和迟到预览，需再次确认才会写入工资表。</div>
+      <div class="wecom-actions"><button class="wecom-secondary" id="wecomFileFallbackBtn">改用 Excel 导入</button><button class="wecom-cancel">取消</button><button class="wecom-confirm">确认映射并预览考勤</button></div>
+    </div>`;
+    modal.querySelector('.wecom-close').onclick = closeModal;
+    modal.querySelector('.wecom-cancel').onclick = closeModal;
+    modal.querySelector('#wecomFileFallbackBtn').onclick = () => { closeModal(); openImport(); };
+    modal.querySelector('.wecom-confirm').onclick = async (event) => {
+      const button = event.currentTarget;
+      const selections = [...modal.querySelectorAll('[data-wecom-map]')].map((select) => ({ employeeId: select.dataset.wecomMap, userId: select.value }));
+      const chosen = selections.filter((item) => item.userId);
+      if (!chosen.length) return alert('请至少选择 1 名企业微信员工。');
+      if (new Set(chosen.map((item) => item.userId)).size !== chosen.length) return alert('同一个企业微信账号不能映射给多名员工。');
+      button.disabled = true;
+      button.textContent = '正在读取考勤…';
+      try {
+        const latest = read();
+        const selectedEmployees = [];
+        for (const item of chosen) {
+          const employee = (latest.employees || []).find((entry) => entry.id === item.employeeId);
+          if (!employee) continue;
+          employee.wecomUserId = item.userId;
+          selectedEmployees.push(employee);
+        }
+        save(latest);
+        try { await window.PayrollWorkspace?.saveNow?.({ force: true }); } catch (_) {}
+        try { await window.PayrollCloud?.saveNow?.({ force: true }); } catch (_) {}
+        const data = await requestMonth(month, selectedEmployees, 8);
+        renderPreview(latest, month, selectedEmployees, data);
+      } catch (error) {
+        button.disabled = false;
+        button.textContent = '重试：确认映射并预览';
+        alert(error.message);
+      }
     };
   }
 
@@ -316,15 +404,17 @@
     modal.innerHTML = `<div class="wecom-card"><div class="wecom-head"><div><h2>正在读取企业微信考勤</h2><p>${esc(monthLabel(month))} · 已配置 ${mapped.length} 人，未配置 ${unmapped.length} 人</p></div><button class="wecom-close">×</button></div><div class="wecom-note">正在通过安全服务端连接企业微信，请稍候…</div></div>`;
     document.body.appendChild(modal);
     modal.querySelector('.wecom-close').onclick = closeModal;
-    if (!mapped.length) {
-      modal.querySelector('.wecom-note').outerHTML = '<div class="wecom-error">当前月份没有员工配置企业微信 UserID。请先到“员工档案 → 编辑”填写映射。</div>';
-      return;
-    }
     try {
+      if (unmapped.length) {
+        const data = await requestDiscover(month, 8);
+        renderMappingPreview(state, month, monthEmployees, data);
+        return;
+      }
       const data = await requestMonth(month, mapped, 8);
       renderPreview(state, month, mapped, data);
     } catch (error) {
-      modal.querySelector('.wecom-note').outerHTML = `<div class="wecom-error"><strong>无法同步考勤</strong><br>${esc(error.message)}</div>`;
+      modal.querySelector('.wecom-note').outerHTML = `<div class="wecom-error"><strong>无法同步考勤</strong><br>${esc(error.message)}<br><button class="wecom-secondary" id="wecomErrorFileBtn" style="margin-top:12px;height:38px;padding:0 12px;border-radius:8px">改用 Excel 导入</button></div>`;
+      modal.querySelector('#wecomErrorFileBtn').onclick = () => { closeModal(); openImport(); };
     }
   }
 
@@ -335,8 +425,8 @@
     button.type = 'button';
     button.className = 'btn wecom-sync-btn';
     button.id = 'importWecomAttendanceBtn';
-    button.textContent = '导入企业微信考勤';
-    button.onclick = openImport;
+    button.textContent = '同步企业微信考勤';
+    button.onclick = openSync;
     toolbar.insertBefore(button, document.getElementById('exportCsvBtn'));
   }
 
