@@ -2,15 +2,15 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { monthRange, normalizeMonthRecord, extractRuleRanges } = require('../lib/wecom-attendance');
+const { monthRange, normalizeMonthRecord, extractRuleRanges, classifyLeave } = require('../lib/wecom-attendance');
 
 test('monthRange uses Asia/Shanghai month boundaries', () => {
   const range = monthRange('2026-07');
   assert.equal(new Date(range.start * 1000).toISOString(), '2026-06-30T16:00:00.000Z');
-  assert.equal(new Date(range.end * 1000).toISOString(), '2026-07-31T16:00:00.000Z');
+  assert.equal(new Date(range.end * 1000).toISOString(), '2026-07-30T16:00:00.000Z');
 });
 
-test('normalizes leave, absence and late data into payroll fields', () => {
+test('keeps paid annual leave in attendance while normalizing absence and late data', () => {
   const result = normalizeMonthRecord({
     base_info: { acctid: 'zhangsan', name: '张三', rule_info: { groupname: '标准班' } },
     summary_info: { work_days: 22, regular_days: 18, except_days: 2 },
@@ -25,8 +25,15 @@ test('normalizes leave, absence and late data into payroll fields', () => {
     leaveDays: result.leaveDays,
     absentDays: result.absentDays,
     lateCount: result.lateCount,
-    lateMinutes: result.lateMinutes
-  }, { attendanceDays: 20, leaveDays: 1, absentDays: 1, lateCount: 2, lateMinutes: 15 });
+    lateMinutes: result.lateMinutes,
+    paidLeaveDays: result.paidLeaveDays
+  }, { attendanceDays: 21, leaveDays: 0, absentDays: 1, lateCount: 2, lateMinutes: 15, paidLeaveDays: 1 });
+});
+
+test('only auto-deducts clearly unpaid leave types', () => {
+  assert.equal(classifyLeave('事假'), 'deductible');
+  assert.equal(classifyLeave('年假'), 'paid');
+  assert.equal(classifyLeave('病假'), 'other');
 });
 
 test('converts hourly leave using an eight-hour workday', () => {

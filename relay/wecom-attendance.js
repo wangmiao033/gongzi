@@ -16,8 +16,20 @@ function monthRange(month) {
   const [year, value] = month.split('-').map(Number);
   // 企业微信要求传入本地 0 点。固定使用中国时区，避免服务器 UTC 时区造成跨月。
   const start = Math.floor(Date.UTC(year, value - 1, 1, -8) / 1000);
-  const end = Math.floor(Date.UTC(year, value, 1, -8) / 1000);
+  // endtime 为包含边界。传入下月 1 日会把下个月第一天也算进本月，导致应出勤多 1 天。
+  const end = Math.floor(Date.UTC(year, value, 0, -8) / 1000);
   return { start, end };
+}
+
+const DEDUCTIBLE_LEAVE_PATTERN = /事假|无薪|无工资|停薪|unpaid/i;
+const PAID_LEAVE_PATTERN = /年假|带薪|调休|婚假|产假|陪产|丧假|育儿|护理|哺乳|工伤|法定假/i;
+
+function classifyLeave(name) {
+  const value = String(name || '请假').trim();
+  if (DEDUCTIBLE_LEAVE_PATTERN.test(value)) return 'deductible';
+  if (PAID_LEAVE_PATTERN.test(value)) return 'paid';
+  // 未知假别不自动扣薪，避免把病假等需要人工核定比例的项目误按全额事假扣款。
+  return 'other';
 }
 
 function durationToDays(item, dailyWorkHours = 8) {
@@ -38,7 +50,22 @@ function normalizeMonthRecord(record, dailyWorkHours = 8) {
   const approvals = Array.isArray(record?.sp_items) ? record.sp_items : [];
   const exception = (type) => exceptions.find((item) => Number(item.exception) === type) || {};
   const leaveItems = approvals.filter((item) => Number(item.type) === 1);
-  const leaveDays = leaveItems.reduce((sum, item) => sum + durationToDays(item, dailyWorkHours), 0);
+  const leaveBreakdown = leaveItems.map((item) => {
+    const category = classifyLeave(item.name);
+    return {
+      name: String(item.name || '请假'),
+      count: Number(item.count) || 0,
+      days: round(durationToDays(item, dailyWorkHours)),
+      category,
+      deductible: category === 'deductible'
+    };
+  });
+  const leaveDays = leaveBreakdown
+    .filter((item) => item.deductible)
+    .reduce((sum, item) => sum + item.days, 0);
+  const paidLeaveDays = leaveBreakdown
+    .filter((item) => !item.deductible)
+    .reduce((sum, item) => sum + item.days, 0);
   const absent = exception(4);
   const absentDays = Number(absent.duration) > 0
     ? Number(absent.duration) / 86400
@@ -56,14 +83,12 @@ function normalizeMonthRecord(record, dailyWorkHours = 8) {
     exceptionDays: round(Number(summary.except_days) || 0),
     attendanceDays: round(Math.max(workDays - leaveDays - absentDays, 0)),
     leaveDays: round(leaveDays),
+    paidLeaveDays: round(paidLeaveDays),
+    totalLeaveDays: round(leaveDays + paidLeaveDays),
     absentDays: round(absentDays),
     lateCount: Math.max(Number(late.count) || 0, 0),
     lateMinutes: Math.round(Math.max(Number(late.duration) || 0, 0) / 60),
-    leaveBreakdown: leaveItems.map((item) => ({
-      name: String(item.name || '请假'),
-      count: Number(item.count) || 0,
-      days: round(durationToDays(item, dailyWorkHours))
-    })),
+    leaveBreakdown,
     source: record
   };
 }
@@ -180,5 +205,6 @@ module.exports = {
   getTagUsers,
   monthRange,
   normalizeMonthRecord,
-  durationToDays
+  durationToDays,
+  classifyLeave
 };

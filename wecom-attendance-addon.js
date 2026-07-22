@@ -9,6 +9,16 @@
   const num = (value) => Number(value) || 0;
   const monthLabel = (month) => /^\d{4}-\d{2}$/.test(month || '') ? `${month.slice(0, 4)} 年 ${Number(month.slice(5))} 月` : month;
   const normalizedName = (value) => String(value || '').trim().toLowerCase().replace(/[\s\-_··—–・•（）()]/g, '');
+  const roundDays = (value) => Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+
+  function currentShanghaiMonth() {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit'
+    }).formatToParts(new Date());
+    const year = parts.find((item) => item.type === 'year')?.value;
+    const month = parts.find((item) => item.type === 'month')?.value;
+    return `${year}-${month}`;
+  }
 
   function save(state) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -127,14 +137,24 @@
     const matched = employees.filter((employee) => byUserId.has(employee.wecomUserId));
     const missing = employees.filter((employee) => !byUserId.has(employee.wecomUserId));
     const locked = matched.filter((employee) => archiveLocked(state, month, employee));
+    const monthData = state.months?.[month] || {};
+    const standardDays = num(monthData.standardDays) || num(monthData.workDays)
+      || Math.max(0, ...(response.records || []).map((item) => num(item.workDays)));
+    const incomplete = month >= currentShanghaiMonth();
+    const mismatch = matched.filter((employee) => {
+      const row = byUserId.get(employee.wecomUserId);
+      return row && standardDays && Math.abs(num(row.workDays) - standardDays) > 0.001;
+    });
+    const suggestedAttendance = (row) => roundDays(Math.max(standardDays - num(row?.leaveDays) - num(row?.absentDays), 0));
     modal.innerHTML = `<div class="wecom-card" role="dialog" aria-modal="true">
-      <div class="wecom-head"><div><h2>企业微信考勤预览</h2><p>${esc(monthLabel(month))} · 确认后才会写入工资表</p></div><button class="wecom-close">×</button></div>
-      <div class="wecom-summary"><span class="wecom-chip">已映射 ${matched.length} 人</span><span class="wecom-chip ${missing.length ? 'warn' : ''}">未返回 ${missing.length} 人</span><span class="wecom-chip ${locked.length ? 'warn' : ''}">已归档锁定 ${locked.length} 人</span></div>
-      <div class="wecom-table-wrap"><table class="wecom-table"><thead><tr><th>写入</th><th>员工 / UserID</th><th>企业微信姓名</th><th>应出勤</th><th>建议出勤</th><th>请假</th><th>旷工</th><th>迟到次数</th><th>迟到分钟</th></tr></thead><tbody>
-        ${employees.map((employee) => { const row = byUserId.get(employee.wecomUserId); const disabled = !row || archiveLocked(state, month, employee); return `<tr class="${!row ? 'wecom-missing' : ''}"><td><input type="checkbox" data-wecom-employee="${esc(employee.id)}" ${disabled ? 'disabled' : 'checked'}></td><td><strong>${esc(employee.name)}</strong><br><small>${esc(employee.wecomUserId)}</small></td><td>${esc(row?.name || '企业微信未返回')}</td><td>${row ? row.workDays : '-'}</td><td>${row ? row.attendanceDays : '-'}</td><td>${row ? row.leaveDays : '-'}</td><td>${row ? row.absentDays : '-'}</td><td>${row ? row.lateCount : '-'}</td><td>${row ? row.lateMinutes : '-'}</td></tr>`; }).join('')}
+      <div class="wecom-head"><div><h2>企业微信考勤预览</h2><p>${esc(monthLabel(month))} · 工资标准 ${esc(standardDays)} 天${incomplete ? ' · 本月尚未结束，仅供检查' : ' · 确认后才会写入工资表'}</p></div><button class="wecom-close">×</button></div>
+      <div class="wecom-summary"><span class="wecom-chip">已映射 ${matched.length} 人</span><span class="wecom-chip">工资标准 ${esc(standardDays)} 天</span><span class="wecom-chip ${missing.length ? 'warn' : ''}">未返回 ${missing.length} 人</span><span class="wecom-chip ${mismatch.length ? 'warn' : ''}">统计期未满／不一致 ${mismatch.length} 人</span><span class="wecom-chip ${locked.length ? 'warn' : ''}">已归档锁定 ${locked.length} 人</span></div>
+      <div class="wecom-table-wrap"><table class="wecom-table"><thead><tr><th>写入</th><th>员工 / UserID</th><th>企业微信姓名</th><th>工资标准</th><th>企微已统计</th><th>建议出勤</th><th>扣薪请假</th><th>带薪／其他假</th><th>旷工</th><th>迟到次数</th><th>迟到分钟</th></tr></thead><tbody>
+        ${employees.map((employee) => { const row = byUserId.get(employee.wecomUserId); const disabled = incomplete || !row || archiveLocked(state, month, employee); return `<tr class="${!row ? 'wecom-missing' : ''}"><td><input type="checkbox" data-wecom-employee="${esc(employee.id)}" ${disabled ? 'disabled' : 'checked'}></td><td><strong>${esc(employee.name)}</strong><br><small>${esc(employee.wecomUserId)}</small></td><td>${esc(row?.name || '企业微信未返回')}</td><td>${row ? standardDays : '-'}</td><td>${row ? row.workDays : '-'}</td><td>${row ? suggestedAttendance(row) : '-'}</td><td>${row ? row.leaveDays : '-'}</td><td>${row ? row.paidLeaveDays : '-'}</td><td>${row ? row.absentDays : '-'}</td><td>${row ? row.lateCount : '-'}</td><td>${row ? row.lateMinutes : '-'}</td></tr>`; }).join('')}
       </tbody></table></div>
-      <div class="wecom-note">建议出勤天数 = 企业微信应出勤天数 − 请假天数 − 旷工天数；迟到仍计为出勤。小时制请假按每天 8 小时折算。未返回数据或工资已归档的员工不会写入。请先核对预览，再确认导入。</div>
-      <div class="wecom-actions"><button class="wecom-cancel">取消</button><button class="wecom-confirm" ${matched.length === locked.length ? 'disabled' : ''}>确认写入当月工资表</button></div>
+      <div class="wecom-note">工资标准天数取自新建工资月份时设置的标准，不再把月中“截至今天已统计天数”当成整月标准。建议出勤 = 工资标准 − 事假等扣薪请假 − 旷工；年假、调休等带薪假不会减少出勤或自动扣薪。迟到仍计为出勤。</div>
+      ${incomplete ? '<div class="wecom-error"><strong>本月考勤尚未结束</strong><br>企业微信只返回截至今天已经发生的工作日，所以现在看到的统计天数会少于整月。系统已禁止提前写入；请在本月结束后、下月做工资时再点一次同步。</div>' : ''}
+      <div class="wecom-actions"><button class="wecom-cancel">取消</button><button class="wecom-confirm" ${incomplete || matched.length === locked.length ? 'disabled' : ''}>${incomplete ? '本月未结束，仅预览' : '确认写入当月工资表'}</button></div>
     </div>`;
     modal.querySelector('.wecom-close').onclick = closeModal;
     modal.querySelector('.wecom-cancel').onclick = closeModal;
@@ -142,18 +162,26 @@
       const latest = read();
       const monthData = latest.months?.[month];
       if (!monthData) return alert('当前工资月份不存在，请刷新后重试。');
+      if (month >= currentShanghaiMonth()) return alert('本月考勤尚未结束，请在下月做工资时再同步并确认。');
       const selected = [...modal.querySelectorAll('[data-wecom-employee]:checked')].map((input) => input.dataset.wecomEmployee);
       for (const employee of employees.filter((item) => selected.includes(item.id))) {
         if (archiveLocked(latest, month, employee)) continue;
         const source = byUserId.get(employee.wecomUserId);
         const row = monthData.rows?.[employee.id];
         if (!source || !row) continue;
-        row.attendanceDays = source.attendanceDays;
+        row.workDays = standardDays;
+        row.attendanceDays = suggestedAttendance(source);
         row.leaveDays = source.leaveDays;
         row.absentDays = source.absentDays;
         row.lateCount = source.lateCount;
         row.lateMinutes = source.lateMinutes;
-        row.wecomAttendance = { syncedAt: new Date().toISOString(), month, userId: source.userId, source: source.source };
+        row.wecomAttendance = {
+          syncedAt: new Date().toISOString(), month, userId: source.userId,
+          standardDays, enterpriseWorkDays: source.workDays,
+          deductibleLeaveDays: source.leaveDays, paidLeaveDays: source.paidLeaveDays,
+          absentDays: source.absentDays, lateCount: source.lateCount, lateMinutes: source.lateMinutes,
+          leaveBreakdown: source.leaveBreakdown || []
+        };
       }
       latest.wecomAttendanceImports = latest.wecomAttendanceImports || [];
       latest.wecomAttendanceImports.push({ month, importedAt: new Date().toISOString(), employeeIds: selected });
@@ -336,15 +364,15 @@
     modal.innerHTML = `<div class="wecom-card" role="dialog" aria-modal="true">
       <div class="wecom-head"><div><h2>企业微信考勤导入预览</h2><p>${esc(monthLabel(month))} · ${esc(fileName)} · 工作表“${esc(parsed.sheetName)}”</p></div><button class="wecom-close">×</button></div>
       <div class="wecom-summary"><span class="wecom-chip">已匹配 ${matches.filter((item) => item.record).length} 人</span><span class="wecom-chip ${unmatchedSource.length ? 'warn' : ''}">表中未匹配 ${unmatchedSource.length} 人</span><span class="wecom-chip ${ambiguous.length ? 'warn' : ''}">重名待处理 ${ambiguous.length} 人</span><span class="wecom-chip ${locked.length ? 'warn' : ''}">归档锁定 ${locked.length} 人</span></div>
-      <div class="wecom-fields">识别字段：${esc(parsed.detectedFields.map((field) => ({ workDays:'应出勤', attendanceDays:'出勤', leaveDays:'请假', absentDays:'旷工', lateCount:'迟到次数', lateMinutes:'迟到分钟', name:'姓名', userId:'UserID' }[field] || field)).join('、'))}。空白框不会覆盖工资表原值，识别结果可以在确认前修改。</div>
-      <div class="wecom-table-wrap"><table class="wecom-table"><thead><tr><th>写入</th><th>工资员工 / 匹配来源</th><th>应出勤</th><th>出勤</th><th>请假</th><th>旷工</th><th>迟到次数</th><th>迟到分钟</th></tr></thead><tbody>
+      <div class="wecom-fields">识别字段：${esc(parsed.detectedFields.map((field) => ({ workDays:'应出勤', attendanceDays:'出勤', leaveDays:'扣薪请假', paidLeaveDays:'带薪／其他假', absentDays:'旷工', lateCount:'迟到次数', lateMinutes:'迟到分钟', name:'姓名', userId:'UserID' }[field] || field)).join('、'))}。年假、调休等不会写入扣薪请假；空白框不会覆盖工资表原值，识别结果可以在确认前修改。</div>
+      <div class="wecom-table-wrap"><table class="wecom-table"><thead><tr><th>写入</th><th>工资员工 / 匹配来源</th><th>应出勤</th><th>出勤</th><th>扣薪请假</th><th>带薪／其他假</th><th>旷工</th><th>迟到次数</th><th>迟到分钟</th></tr></thead><tbody>
         ${matches.map((item) => {
           const employee = item.employee;
           const source = item.record;
           const row = monthRows[employee.id];
           const disabled = !source || item.ambiguous || archiveLocked(state, month, employee);
           const reason = item.ambiguous ? '文件中存在重名记录' : (!source ? '文件中未找到' : (disabled ? '工资已归档' : `${item.matchType}匹配 · 第${source.sourceRow}行`));
-          return `<tr class="${!source || item.ambiguous ? 'wecom-missing' : ''}"><td><input type="checkbox" data-import-check="${esc(employee.id)}" ${disabled ? 'disabled' : 'checked'}></td><td><strong>${esc(employee.name)}</strong><br><span class="wecom-source">${esc(source?.name || source?.userId || reason)} · ${esc(reason)}</span></td><td>${metricInput(employee,row,'workDays')}</td><td>${metricInput(employee,row,'attendanceDays')}</td><td>${metricInput(employee,row,'leaveDays')}</td><td>${metricInput(employee,row,'absentDays')}</td><td>${metricInput(employee,row,'lateCount','1')}</td><td>${metricInput(employee,row,'lateMinutes','1')}</td></tr>`;
+          return `<tr class="${!source || item.ambiguous ? 'wecom-missing' : ''}"><td><input type="checkbox" data-import-check="${esc(employee.id)}" ${disabled ? 'disabled' : 'checked'}></td><td><strong>${esc(employee.name)}</strong><br><span class="wecom-source">${esc(source?.name || source?.userId || reason)} · ${esc(reason)}</span></td><td>${metricInput(employee,row,'workDays')}</td><td>${metricInput(employee,row,'attendanceDays')}</td><td>${metricInput(employee,row,'leaveDays')}</td><td>${metricInput(employee,row,'paidLeaveDays')}</td><td>${metricInput(employee,row,'absentDays')}</td><td>${metricInput(employee,row,'lateCount','1')}</td><td>${metricInput(employee,row,'lateMinutes','1')}</td></tr>`;
         }).join('')}
       </tbody></table></div>
       ${unmatchedSource.length ? `<div class="wecom-note">表中未匹配到工资员工：${esc(unmatchedSource.slice(0, 12).map((record) => record.name || record.userId).join('、'))}${unmatchedSource.length > 12 ? '等' : ''}。这些记录不会写入。</div>` : ''}
@@ -359,7 +387,7 @@
       const monthData = latest.months?.[month];
       if (!monthData) return alert('当前工资月份不存在，请刷新后重试。');
       const selected = [...modal.querySelectorAll('[data-import-check]:checked')].map((input) => input.dataset.importCheck);
-      const fields = ['workDays', 'attendanceDays', 'leaveDays', 'absentDays', 'lateCount', 'lateMinutes'];
+      const fields = ['workDays', 'attendanceDays', 'leaveDays', 'paidLeaveDays', 'absentDays', 'lateCount', 'lateMinutes'];
       for (const item of matches.filter((entry) => selected.includes(entry.employee.id))) {
         if (!item.record || archiveLocked(latest, month, item.employee)) continue;
         const row = monthData.rows?.[item.employee.id];

@@ -25,18 +25,35 @@ test('detects a two-row enterprise WeChat monthly summary header', () => {
   assert.deepEqual(parsed.records.map((record) => record.name), ['王淼', '龚辉']);
   assert.deepEqual(parsed.records[0], {
     name: '王淼', userId: 'wangmiao', department: '', workDays: 22,
-    attendanceDays: 20.5, leaveDays: 1, absentDays: 0.5,
+    attendanceDays: 20.5, leaveDays: 1, paidLeaveDays: null, absentDays: 0.5,
     lateCount: 2, lateMinutes: 18, sourceRow: 4
   });
 });
 
-test('sums leave-type columns when total leave is absent', () => {
+test('separates paid annual leave from deductible personal leave', () => {
   const parsed = parseSheets([{ name: '考勤统计', rows: [
     ['姓名', '应出勤天数', '年假（天）', '事假（小时）', '旷工天数', '迟到次数'],
     ['罗汉金', 21, 1, 4, 0, 1]
   ] }]);
-  assert.equal(parsed.records[0].leaveDays, 1.5);
-  assert.equal(parsed.records[0].attendanceDays, 19.5);
+  assert.equal(parsed.records[0].leaveDays, 0.5);
+  assert.equal(parsed.records[0].paidLeaveDays, 1);
+  assert.equal(parsed.records[0].attendanceDays, 20.5);
+});
+
+test('parses the exported enterprise WeChat month-report layout', () => {
+  const parsed = parseSheets([{ name: '上下班打卡_月报', rows: [
+    ['上下班打卡_月报'],
+    ['统计时间:04-01 ～ 04-30'],
+    ['姓名', '账号', '所属规则', '考勤概况', '', '假勤统计', ''],
+    ['', '', '', '应出勤天数(天)', '实际出勤天数(天)', '年假(天)', '事假(小时)'],
+    ['常驻打杂一哥', 'YiBuWeiMa', '大熊游戏打卡', 21, 21, 1, '--']
+  ] }]);
+  assert.deepEqual({
+    workDays: parsed.records[0].workDays,
+    attendanceDays: parsed.records[0].attendanceDays,
+    leaveDays: parsed.records[0].leaveDays,
+    paidLeaveDays: parsed.records[0].paidLeaveDays
+  }, { workDays: 21, attendanceDays: 21, leaveDays: null, paidLeaveDays: 1 });
 });
 
 test('matches UserID first and unique names as a fallback', () => {

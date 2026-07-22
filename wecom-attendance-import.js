@@ -11,6 +11,7 @@
     workDays: '应出勤天数',
     attendanceDays: '出勤天数',
     leaveDays: '请假天数',
+    paidLeaveDays: '带薪／其他假',
     absentDays: '旷工天数',
     lateCount: '迟到次数',
     lateMinutes: '迟到分钟'
@@ -74,7 +75,9 @@
     if (!/次数|次$/.test(value) && /(旷工天数|旷工\(天\)|旷工时长天|旷工合计)/.test(value)) return 'absentDays';
     if (/(迟到次数|迟到\(次\)|迟到次$)/.test(value)) return 'lateCount';
     if (/(迟到分钟|迟到时长|迟到累计|迟到总时长)/.test(value) && !/次数/.test(value)) return 'lateMinutes';
-    if (!/次数|次$/.test(value) && /(年假|事假|病假|调休|婚假|产假|陪产假|丧假|哺乳假|育儿假|护理假|其他假|请假)/.test(value)) return 'leaveComponent';
+    if (!/次数|次$/.test(value) && /(事假|无薪|无工资|停薪)/.test(value)) return 'leaveComponent';
+    if (!/次数|次$/.test(value) && /(年假|带薪|调休|婚假|产假|陪产假|丧假|哺乳假|育儿假|护理假|工伤假|法定假|病假|其他假)/.test(value)) return 'paidLeaveComponent';
+    if (!/次数|次$/.test(value) && /请假/.test(value)) return 'leaveComponent';
     return null;
   }
 
@@ -111,7 +114,7 @@
   function headerScore(columns) {
     const fields = new Set(columns.map((item) => item.field));
     const identity = fields.has('name') || fields.has('userId');
-    const metricCount = ['workDays', 'attendanceDays', 'leaveDays', 'absentDays', 'lateCount', 'lateMinutes', 'leaveComponent']
+    const metricCount = ['workDays', 'attendanceDays', 'leaveDays', 'paidLeaveDays', 'absentDays', 'lateCount', 'lateMinutes', 'leaveComponent', 'paidLeaveComponent']
       .filter((field) => fields.has(field)).length;
     if (!identity || !metricCount) return -1;
     return (fields.has('name') ? 4 : 0) + (fields.has('userId') ? 4 : 0) + metricCount * 3 + columns.length;
@@ -145,6 +148,7 @@
     if (!header) return null;
     const records = [];
     const leaveColumns = header.columns.filter((item) => item.field === 'leaveComponent');
+    const paidLeaveColumns = header.columns.filter((item) => item.field === 'paidLeaveComponent');
     for (let index = header.start + header.depth; index < rows.length; index += 1) {
       const row = rows[index] || [];
       const name = text(valueFor(row, header.columns, 'name'));
@@ -164,6 +168,12 @@
         const values = leaveColumns.map((column) => parseDays(row[column.index], column.header, dailyWorkHours)).filter((value) => value !== null);
         leaveDays = values.length ? round(values.reduce((sum, value) => sum + value, 0)) : null;
       }
+      const paidLeaveValues = paidLeaveColumns
+        .map((column) => parseDays(row[column.index], column.header, dailyWorkHours))
+        .filter((value) => value !== null);
+      const paidLeaveDays = paidLeaveValues.length
+        ? round(paidLeaveValues.reduce((sum, value) => sum + value, 0))
+        : null;
       const workDays = readDays('workDays');
       const absentDays = readDays('absentDays');
       let attendanceDays = readDays('attendanceDays');
@@ -178,13 +188,18 @@
         workDays,
         attendanceDays,
         leaveDays,
+        paidLeaveDays,
         absentDays,
         lateCount: readNumber('lateCount'),
         lateMinutes: lateColumn ? parseMinutes(row[lateColumn.index], lateColumn.header) : null,
         sourceRow: index + 1
       });
     }
-    const detectedFields = [...new Set(header.columns.map((item) => item.field === 'leaveComponent' ? 'leaveDays' : item.field))]
+    const detectedFields = [...new Set(header.columns.map((item) => {
+      if (item.field === 'leaveComponent') return 'leaveDays';
+      if (item.field === 'paidLeaveComponent') return 'paidLeaveDays';
+      return item.field;
+    }))]
       .filter((field) => FIELD_LABELS[field]);
     const nameBonus = /月报|月度|汇总|统计/.test(text(sheet.name)) ? 8 : (/日报|明细|原始/.test(text(sheet.name)) ? -4 : 0);
     return {
