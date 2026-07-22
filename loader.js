@@ -17,11 +17,11 @@
     const showSecureShell=(message='正在验证登录状态…')=>{
       document.documentElement.removeAttribute('data-payroll-app-loaded');
       document.body.innerHTML=`
-        <main style="min-height:100vh;display:grid;place-items:center;background:linear-gradient(145deg,#eef6f8,#f8fafc);font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#334155">
-          <div style="text-align:center;padding:32px">
-            <div style="width:54px;height:54px;margin:0 auto 16px;border-radius:16px;display:grid;place-items:center;background:#0f879c;color:#fff;font-size:25px;font-weight:700;box-shadow:0 14px 34px rgba(15,135,156,.2)">薪</div>
-            <div style="font-size:18px;font-weight:700;color:#0f172a">工资数据受登录保护</div>
-            <div style="margin-top:8px;font-size:13px;color:#64748b">${message}</div>
+        <main class="secure-shell">
+          <div class="secure-shell-card">
+            <div class="secure-shell-mark">薪</div>
+            <div class="secure-shell-title">工资数据受登录保护</div>
+            <div class="secure-shell-copy">${message}</div>
           </div>
         </main>`;
     };
@@ -125,7 +125,7 @@
     await loadScript('./email-otp-addon.js?v=20260721-5','中文登录注册模块');
   }catch(error){
     document.documentElement.removeAttribute('data-payroll-app-loaded');
-    document.body.innerHTML='<div style="min-height:100vh;display:grid;place-items:center;background:#f4f7fb;padding:24px;font-family:system-ui;color:#172033"><div style="max-width:620px;background:#fff;border:1px solid #d9e1ec;border-radius:16px;padding:28px;box-shadow:0 10px 30px rgba(30,55,90,.08)"><h2 style="margin-top:0">工资系统加载失败</h2><p style="line-height:1.7;color:#64748b">'+String(error&&error.message||error)+'</p><button onclick="sessionStorage.clear();location.replace(location.origin+\'/?repair=1\')" style="border:0;border-radius:9px;background:#126f86;color:#fff;padding:10px 16px;font-weight:700;cursor:pointer">修复并重新进入</button></div></div>';
+    document.body.innerHTML='<main class="secure-shell"><div class="secure-shell-card secure-shell-error"><div class="secure-shell-mark">薪</div><h2>工资系统加载失败</h2><p>'+String(error&&error.message||error)+'</p><button class="btn primary" onclick="sessionStorage.clear();location.replace(location.origin+\'/?repair=1\')">修复并重新进入</button></div></main>';
     console.error(error);
   }
 })();
