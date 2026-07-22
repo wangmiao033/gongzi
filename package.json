@@ -1,0 +1,14 @@
+{
+  "name": "gongzi-payroll",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "undici": "^7.16.0"
+  }
+}

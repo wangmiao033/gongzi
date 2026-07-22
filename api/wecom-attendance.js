@@ -1,10 +1,17 @@
 'use strict';
 
 const { getAccessToken, getRules, getMonthData } = require('../lib/wecom-attendance');
+const { createFixieFetch } = require('../lib/fixie-fetch');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://bypekqxsnuvqbgvdosdl.supabase.co';
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'sb_publishable_TFfmF3_7t8ceSwP1B0iKxA_sfcb5kca';
 let tokenCache = { value: '', expiresAt: 0 };
+let wecomFetch = null;
+
+function enterpriseWecomFetch() {
+  if (!wecomFetch) wecomFetch = createFixieFetch(process.env.FIXIE_URL);
+  return wecomFetch;
+}
 
 function send(res, status, body) {
   res.statusCode = status;
@@ -34,7 +41,10 @@ async function accessToken() {
   const secret = process.env.WECOM_CHECKIN_SECRET;
   if (!corpId || !secret) throw Object.assign(new Error('企业微信考勤尚未配置，请管理员设置 Vercel 环境变量'), { status: 503 });
   if (tokenCache.value && tokenCache.expiresAt > Date.now() + 60_000) return tokenCache.value;
-  tokenCache = { value: await getAccessToken(corpId, secret), expiresAt: Date.now() + 6_600_000 };
+  tokenCache = {
+    value: await getAccessToken(corpId, secret, enterpriseWecomFetch()),
+    expiresAt: Date.now() + 6_600_000
+  };
   return tokenCache.value;
 }
 
@@ -71,13 +81,19 @@ module.exports = async function handler(req, res) {
     const action = body.action || 'month';
     const token = await accessToken();
     if (action === 'rules') {
-      const data = await getRules(token);
+      const data = await getRules(token, enterpriseWecomFetch());
       return send(res, 200, { ok: true, rules: data.group || data.group_list || data });
     }
     const userIds = [...new Set((body.userIds || []).map((value) => String(value).trim()).filter(Boolean))];
     if (!/^\d{4}-\d{2}$/.test(body.month || '')) throw Object.assign(new Error('请选择有效的工资月份'), { status: 400 });
     if (!userIds.length || userIds.length > 100) throw Object.assign(new Error('请配置 1 至 100 名员工的企业微信 UserID'), { status: 400 });
-    const records = await getMonthData(token, body.month, userIds, Number(body.dailyWorkHours) || 8);
+    const records = await getMonthData(
+      token,
+      body.month,
+      userIds,
+      Number(body.dailyWorkHours) || 8,
+      enterpriseWecomFetch()
+    );
     return send(res, 200, { ok: true, month: body.month, records, requestedUserIds: userIds });
   } catch (error) {
     console.error('WeCom attendance error', { message: error?.message, code: error?.code, status: error?.status });

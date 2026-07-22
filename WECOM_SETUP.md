@@ -18,6 +18,8 @@
 
 两项均勾选 Production、Preview、Development，保存后重新部署一次。
 
+企业微信启用可信 IP 时，还需要从 Vercel Marketplace 为当前项目安装 Fixie，并创建 HTTP/HTTPS 免费代理。安装后 Fixie 会自动注入 `FIXIE_URL`；该值包含代理凭证，只能保存在 Vercel 环境变量中，不能复制到前端或提交到仓库。
+
 ## 员工映射和同步
 
 1. 在工资系统“员工档案 → 编辑”中填写企业微信 UserID。UserID 必须与企业微信后台完全一致，不是姓名、手机号或邮箱。
@@ -27,11 +29,20 @@
 
 已归档或已发放的工资不会被考勤同步覆盖。
 
-## Koyeb 免费中转（可选）
+## 固定出口 IP
 
-Koyeb 只负责从固定区域出口调用企业微信。浏览器仍然先访问 Vercel API，Vercel 完成工资账号鉴权后再调用 Koyeb，因此企业微信 Secret 不会出现在网页中。
+当前生产方案使用 Fixie 的 HTTP/HTTPS 静态代理：
 
-Koyeb 服务的 Root directory 使用：
+- 只有访问企业微信 API 的请求通过 Fixie，Supabase 登录和工资云端同步不消耗 Fixie 额度。
+- `WECOM_CORP_ID`、`WECOM_CHECKIN_SECRET` 和 `FIXIE_URL` 均只在 Vercel 服务端使用。
+- 企业微信后台必须同时加入 Fixie 分配的所有静态 IP。
+- 免费方案为每月 500 次请求、100 MB；系统会缓存企业微信 access_token，并使用月报接口批量查询，以减少请求次数。
+
+## 独立中转服务（可选）
+
+如果以后改用自有固定 IP 服务器，可部署 `relay` 目录。浏览器仍然先访问 Vercel API，Vercel 完成工资账号鉴权后再调用中转服务，因此企业微信 Secret 不会出现在网页中。
+
+服务的 Root directory 使用：
 
 ```text
 relay
@@ -39,13 +50,13 @@ relay
 
 Builder 选择 Buildpack，启动命令保持默认的 `npm start`。
 
-在 Koyeb Secret / Environment variables 中配置：
+在中转服务的 Secret / Environment variables 中配置：
 
 - `WECOM_CORP_ID`
 - `WECOM_CHECKIN_SECRET`
 - `WECOM_RELAY_TOKEN`（至少 32 位随机字符串）
 
-部署成功后，先访问 `/health`，再使用受保护的 `/diagnostics/egress-ip` 查询当前出口 IP，并按企业微信后台要求配置可信 IP。
+部署成功后，先访问 `/health`，再使用受保护的 `/diagnostics/egress-ip` 查询当前出口 IP，并按企业微信后台要求配置可信 IP。中转平台必须明确保证静态出口 IP；仅固定部署区域并不等于固定 IP。
 
 在 Vercel 中增加：
 
