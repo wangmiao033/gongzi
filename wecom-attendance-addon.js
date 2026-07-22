@@ -26,6 +26,8 @@
       .wecom-summary{display:flex;flex-wrap:wrap;gap:9px;margin:17px 0}.wecom-chip{padding:7px 10px;border-radius:999px;background:#eff8f5;color:#16634b;font-size:12px;font-weight:750}.wecom-chip.warn{background:#fff7ed;color:#9a3412}
       .wecom-table-wrap{overflow:auto;border:1px solid #dce5eb;border-radius:12px}.wecom-table{width:100%;border-collapse:collapse;min-width:840px}.wecom-table th,.wecom-table td{padding:10px 11px;border-bottom:1px solid #e7edf2;text-align:right;white-space:nowrap;font-size:13px}.wecom-table th{background:#f8fafc;color:#475569}.wecom-table th:first-child,.wecom-table td:first-child,.wecom-table th:nth-child(2),.wecom-table td:nth-child(2){text-align:left}.wecom-table tr:last-child td{border-bottom:0}.wecom-missing{color:#b42318;background:#fff8f8}.wecom-note{margin-top:13px;padding:12px 14px;border-radius:10px;background:#f8fafc;color:#64748b;font-size:13px;line-height:1.65}.wecom-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}.wecom-actions button{height:42px;border-radius:9px;padding:0 16px;font:inherit;font-weight:700;cursor:pointer}.wecom-cancel{background:#fff;border:1px solid #cbd5e1}.wecom-confirm{background:#0f879c;color:#fff;border:0}.wecom-confirm:disabled{opacity:.5}.wecom-error{padding:16px;border:1px solid #fecaca;background:#fff1f2;color:#9f1239;border-radius:11px;line-height:1.65}
       .wecom-userid-help{font-size:12px;color:#64748b;margin-top:5px;line-height:1.5}
+      .wecom-file-drop{margin:18px 0;border:2px dashed #9accc0;border-radius:14px;background:#f2fbf8;padding:26px;text-align:center}.wecom-file-drop strong{display:block;font-size:17px;color:#145c48;margin-bottom:7px}.wecom-file-drop small{display:block;color:#64748b;line-height:1.6;margin-bottom:15px}.wecom-file-label{display:inline-flex;align-items:center;justify-content:center;height:42px;padding:0 18px;background:#16835b;color:#fff;border-radius:9px;font-weight:750;cursor:pointer}.wecom-file-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+      .wecom-field-input{width:78px;height:34px;border:1px solid #cbd5e1;border-radius:7px;padding:0 7px;text-align:right;font:inherit;color:#0f172a;background:#fff}.wecom-field-input:focus{outline:2px solid rgba(15,135,156,.2);border-color:#0f879c}.wecom-existing{display:block;color:#94a3b8;font-size:10px;margin-top:3px}.wecom-source{color:#64748b;font-size:11px}.wecom-secondary{background:#fff;border:1px solid #cbd5e1;color:#475569}.wecom-fields{margin-top:8px;color:#64748b;font-size:12px;line-height:1.6}
     `;
     document.head.appendChild(style);
   }
@@ -142,6 +144,165 @@
     };
   }
 
+  function loadXlsx() {
+    if (window.XLSX) return Promise.resolve(window.XLSX);
+    return new Promise((resolve, reject) => {
+      const existing = document.getElementById('payroll-xlsx-reader');
+      if (existing) {
+        existing.addEventListener('load', () => resolve(window.XLSX), { once: true });
+        existing.addEventListener('error', () => reject(new Error('Excel 读取组件加载失败')), { once: true });
+        return;
+      }
+      const script = document.createElement('script');
+      script.id = 'payroll-xlsx-reader';
+      script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+      script.onload = () => resolve(window.XLSX);
+      script.onerror = () => reject(new Error('Excel 读取组件加载失败，请检查网络后重试'));
+      document.head.appendChild(script);
+    });
+  }
+
+  function parseCsv(text) {
+    const rows = [];
+    let row = [];
+    let value = '';
+    let quoted = false;
+    const source = String(text || '').replace(/^\uFEFF/, '');
+    for (let index = 0; index < source.length; index += 1) {
+      const char = source[index];
+      if (quoted) {
+        if (char === '"' && source[index + 1] === '"') { value += '"'; index += 1; }
+        else if (char === '"') quoted = false;
+        else value += char;
+      } else if (char === '"') quoted = true;
+      else if (char === ',') { row.push(value); value = ''; }
+      else if (char === '\n') { row.push(value.replace(/\r$/, '')); rows.push(row); row = []; value = ''; }
+      else value += char;
+    }
+    if (value || row.length) { row.push(value.replace(/\r$/, '')); rows.push(row); }
+    return rows;
+  }
+
+  async function readAttendanceFile(file) {
+    if (!file) throw new Error('请选择考勤文件');
+    if (file.size > 15 * 1024 * 1024) throw new Error('考勤文件不能超过 15MB');
+    if (!/\.(xlsx|xls|csv)$/i.test(file.name)) throw new Error('仅支持 .xlsx、.xls 或 .csv 文件');
+    const buffer = await file.arrayBuffer();
+    if (/\.csv$/i.test(file.name)) {
+      let decoded = new TextDecoder('utf-8').decode(buffer);
+      if ((decoded.match(/�/g) || []).length > 2) decoded = new TextDecoder('gb18030').decode(buffer);
+      return window.WecomAttendanceImport.parseSheets([{ name: file.name, rows: parseCsv(decoded) }], 8);
+    }
+    const XLSX = await loadXlsx();
+    if (!XLSX) throw new Error('Excel 读取组件未能启动');
+    const workbook = XLSX.read(buffer, { type: 'array', cellDates: true });
+    const sheets = workbook.SheetNames.map((name) => ({
+      name,
+      rows: XLSX.utils.sheet_to_json(workbook.Sheets[name], { header: 1, raw: false, defval: '', blankrows: false })
+    }));
+    return window.WecomAttendanceImport.parseSheets(sheets, 8);
+  }
+
+  function inputValue(value) {
+    return value === null || value === undefined || value === '' ? '' : String(value);
+  }
+
+  function metricInput(employee, row, field, step = '0.01') {
+    const current = row?.[field];
+    return `<input class="wecom-field-input" type="number" min="0" step="${step}" data-import-field="${field}" data-import-employee="${esc(employee.id)}" value="${esc(inputValue(employee.__attendanceRecord?.[field]))}"><span class="wecom-existing">原 ${esc(inputValue(current) || '空')}</span>`;
+  }
+
+  function renderFilePreview(state, month, employees, parsed, fileName) {
+    const matches = window.WecomAttendanceImport.matchEmployees(employees, parsed.records);
+    const matchedRecords = new Set(matches.filter((item) => item.record).map((item) => item.record));
+    const unmatchedSource = parsed.records.filter((record) => !matchedRecords.has(record));
+    const locked = matches.filter((item) => item.record && archiveLocked(state, month, item.employee));
+    const ambiguous = matches.filter((item) => item.ambiguous);
+    const available = matches.filter((item) => item.record && !archiveLocked(state, month, item.employee));
+    const monthRows = state.months?.[month]?.rows || {};
+    for (const item of matches) item.employee.__attendanceRecord = item.record;
+    modal.innerHTML = `<div class="wecom-card" role="dialog" aria-modal="true">
+      <div class="wecom-head"><div><h2>企业微信考勤导入预览</h2><p>${esc(monthLabel(month))} · ${esc(fileName)} · 工作表“${esc(parsed.sheetName)}”</p></div><button class="wecom-close">×</button></div>
+      <div class="wecom-summary"><span class="wecom-chip">已匹配 ${matches.filter((item) => item.record).length} 人</span><span class="wecom-chip ${unmatchedSource.length ? 'warn' : ''}">表中未匹配 ${unmatchedSource.length} 人</span><span class="wecom-chip ${ambiguous.length ? 'warn' : ''}">重名待处理 ${ambiguous.length} 人</span><span class="wecom-chip ${locked.length ? 'warn' : ''}">归档锁定 ${locked.length} 人</span></div>
+      <div class="wecom-fields">识别字段：${esc(parsed.detectedFields.map((field) => ({ workDays:'应出勤', attendanceDays:'出勤', leaveDays:'请假', absentDays:'旷工', lateCount:'迟到次数', lateMinutes:'迟到分钟', name:'姓名', userId:'UserID' }[field] || field)).join('、'))}。空白框不会覆盖工资表原值，识别结果可以在确认前修改。</div>
+      <div class="wecom-table-wrap"><table class="wecom-table"><thead><tr><th>写入</th><th>工资员工 / 匹配来源</th><th>应出勤</th><th>出勤</th><th>请假</th><th>旷工</th><th>迟到次数</th><th>迟到分钟</th></tr></thead><tbody>
+        ${matches.map((item) => {
+          const employee = item.employee;
+          const source = item.record;
+          const row = monthRows[employee.id];
+          const disabled = !source || item.ambiguous || archiveLocked(state, month, employee);
+          const reason = item.ambiguous ? '文件中存在重名记录' : (!source ? '文件中未找到' : (disabled ? '工资已归档' : `${item.matchType}匹配 · 第${source.sourceRow}行`));
+          return `<tr class="${!source || item.ambiguous ? 'wecom-missing' : ''}"><td><input type="checkbox" data-import-check="${esc(employee.id)}" ${disabled ? 'disabled' : 'checked'}></td><td><strong>${esc(employee.name)}</strong><br><span class="wecom-source">${esc(source?.name || source?.userId || reason)} · ${esc(reason)}</span></td><td>${metricInput(employee,row,'workDays')}</td><td>${metricInput(employee,row,'attendanceDays')}</td><td>${metricInput(employee,row,'leaveDays')}</td><td>${metricInput(employee,row,'absentDays')}</td><td>${metricInput(employee,row,'lateCount','1')}</td><td>${metricInput(employee,row,'lateMinutes','1')}</td></tr>`;
+        }).join('')}
+      </tbody></table></div>
+      ${unmatchedSource.length ? `<div class="wecom-note">表中未匹配到工资员工：${esc(unmatchedSource.slice(0, 12).map((record) => record.name || record.userId).join('、'))}${unmatchedSource.length > 12 ? '等' : ''}。这些记录不会写入。</div>` : ''}
+      <div class="wecom-note">文件只在当前浏览器中读取，不会上传原始 Excel。确认后仅把勾选员工的非空考勤数字保存到 ${esc(monthLabel(month))}；已归档工资不会被修改。</div>
+      <div class="wecom-actions"><button class="wecom-cancel">取消</button><button class="wecom-confirm" ${available.length ? '' : 'disabled'}>确认写入当月工资表</button></div>
+    </div>`;
+    for (const item of matches) delete item.employee.__attendanceRecord;
+    modal.querySelector('.wecom-close').onclick = closeModal;
+    modal.querySelector('.wecom-cancel').onclick = closeModal;
+    modal.querySelector('.wecom-confirm').onclick = async () => {
+      const latest = read();
+      const monthData = latest.months?.[month];
+      if (!monthData) return alert('当前工资月份不存在，请刷新后重试。');
+      const selected = [...modal.querySelectorAll('[data-import-check]:checked')].map((input) => input.dataset.importCheck);
+      const fields = ['workDays', 'attendanceDays', 'leaveDays', 'absentDays', 'lateCount', 'lateMinutes'];
+      for (const item of matches.filter((entry) => selected.includes(entry.employee.id))) {
+        if (!item.record || archiveLocked(latest, month, item.employee)) continue;
+        const row = monthData.rows?.[item.employee.id];
+        if (!row) continue;
+        for (const field of fields) {
+          const input = modal.querySelector(`[data-import-employee="${CSS.escape(item.employee.id)}"][data-import-field="${field}"]`);
+          if (!input || input.value.trim() === '') continue;
+          const value = Number(input.value);
+          if (!Number.isFinite(value) || value < 0) continue;
+          row[field] = ['lateCount', 'lateMinutes'].includes(field) ? Math.round(value) : Math.round((value + Number.EPSILON) * 100) / 100;
+        }
+        row.wecomAttendance = { importedAt: new Date().toISOString(), month, source: 'file', fileName, sheetName: parsed.sheetName, sourceRow: item.record.sourceRow };
+      }
+      latest.wecomAttendanceImports = latest.wecomAttendanceImports || [];
+      latest.wecomAttendanceImports.push({ month, importedAt: new Date().toISOString(), employeeIds: selected, source: 'file', fileName, sheetName: parsed.sheetName, detectedFields: parsed.detectedFields });
+      save(latest);
+      try { await window.PayrollWorkspace?.saveNow?.({ force: true }); } catch (_) {}
+      try { await window.PayrollCloud?.saveNow?.({ force: true }); } catch (_) {}
+      closeModal();
+      location.reload();
+    };
+  }
+
+  function openImport() {
+    installStyles();
+    const state = read();
+    const month = state.currentMonth;
+    const monthRows = state.months?.[month]?.rows || {};
+    const employees = (state.employees || []).filter((employee) => monthRows[employee.id]);
+    modal = document.createElement('div');
+    modal.className = 'wecom-overlay';
+    modal.innerHTML = `<div class="wecom-card" role="dialog" aria-modal="true">
+      <div class="wecom-head"><div><h2>导入企业微信考勤表</h2><p>${esc(monthLabel(month))} · 当前工资表 ${employees.length} 人</p></div><button class="wecom-close">×</button></div>
+      <div class="wecom-file-drop"><strong>选择企业微信导出的月度考勤汇总</strong><small>支持 Excel（.xlsx、.xls）和 CSV，选择后先预览，不会立即修改工资。</small><label class="wecom-file-label" for="wecomAttendanceFile">选择考勤文件</label><input class="wecom-file-input" id="wecomAttendanceFile" type="file" accept=".xlsx,.xls,.csv"></div>
+      <div class="wecom-note">建议从企业微信管理后台导出“考勤月报／月度汇总”。系统会优先按企业微信 UserID 匹配，没有 UserID 时按唯一姓名匹配。原始文件只在浏览器本地解析。</div>
+      <div class="wecom-actions"><button class="wecom-secondary" id="wecomApiAdvancedBtn">高级：尝试 API 自动同步</button><button class="wecom-cancel">取消</button></div>
+    </div>`;
+    document.body.appendChild(modal);
+    modal.querySelector('.wecom-close').onclick = closeModal;
+    modal.querySelector('.wecom-cancel').onclick = closeModal;
+    modal.querySelector('#wecomApiAdvancedBtn').onclick = () => { closeModal(); openSync(); };
+    modal.querySelector('#wecomAttendanceFile').onchange = async (event) => {
+      const file = event.target.files?.[0];
+      const note = modal.querySelector('.wecom-note');
+      if (!file) return;
+      note.textContent = `正在读取 ${file.name}，请稍候…`;
+      try {
+        const parsed = await readAttendanceFile(file);
+        renderFilePreview(state, month, employees, parsed, file.name);
+      } catch (error) {
+        note.outerHTML = `<div class="wecom-error"><strong>无法识别考勤文件</strong><br>${esc(error.message)}<br><small>请重新导出企业微信“月度汇总”，不要上传截图或 PDF。</small></div>`;
+      }
+    };
+  }
+
   async function openSync() {
     installStyles();
     const state = read();
@@ -167,19 +328,19 @@
     }
   }
 
-  function addSyncButton() {
+  function addAttendanceButton() {
     const toolbar = document.querySelector('#payrollView .page-heading .toolbar');
-    if (!toolbar || document.getElementById('syncWecomAttendanceBtn')) return;
+    if (!toolbar || document.getElementById('importWecomAttendanceBtn')) return;
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'btn wecom-sync-btn';
-    button.id = 'syncWecomAttendanceBtn';
-    button.textContent = '同步企业微信考勤';
-    button.onclick = openSync;
+    button.id = 'importWecomAttendanceBtn';
+    button.textContent = '导入企业微信考勤';
+    button.onclick = openImport;
     toolbar.insertBefore(button, document.getElementById('exportCsvBtn'));
   }
 
   installStyles();
   bindEmployeeField();
-  addSyncButton();
+  addAttendanceButton();
 })();
