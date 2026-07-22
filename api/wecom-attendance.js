@@ -38,11 +38,36 @@ async function accessToken() {
   return tokenCache.value;
 }
 
+async function callRelay(body) {
+  const relayUrl = String(process.env.WECOM_RELAY_URL || '').replace(/\/+$/, '');
+  const relayToken = process.env.WECOM_RELAY_TOKEN;
+  if (!relayUrl) return null;
+  if (!relayToken) throw Object.assign(new Error('企业微信中转服务令牌尚未配置'), { status: 503 });
+  const response = await fetch(`${relayUrl}/wecom-attendance`, {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${relayToken}`,
+      'content-type': 'application/json',
+      accept: 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok || !data?.ok) {
+    throw Object.assign(new Error(data?.error || `企业微信中转服务请求失败（HTTP ${response.status}）`), {
+      status: response.status >= 400 && response.status < 500 ? response.status : 502
+    });
+  }
+  return data;
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return send(res, 405, { ok: false, error: '只支持 POST 请求' });
   try {
     await requireUser(req);
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+    const relayData = await callRelay(body);
+    if (relayData) return send(res, 200, relayData);
     const action = body.action || 'month';
     const token = await accessToken();
     if (action === 'rules') {
