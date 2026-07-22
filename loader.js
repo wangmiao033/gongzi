@@ -119,7 +119,7 @@
     await loadScript('./current-company-filter.js?v=20260721-9','当前工资公司筛选模块');
     await loadScript('./new-payroll-month.js?v=20260721-14','新建工资月份与完整性校验模块');
     await loadScript('./wecom-attendance-import.js?v=20260722-1','企业微信考勤表解析模块');
-    await loadScript('./wecom-attendance-addon.js?v=20260722-2','企业微信考勤同步模块');
+    await loadScript('./wecom-attendance-addon.js?v=20260722-3','企业微信考勤同步模块');
     await window.PayrollCloud.mountAfterApp();
     await window.PayrollWorkspace.mountAfterApp();
     await loadScript('./email-otp-addon.js?v=20260721-5','中文登录注册模块');

@@ -43,9 +43,13 @@
     const row = document.createElement('div');
     row.className = 'form-row full';
     row.innerHTML = `<label>企业微信 UserID</label><input id="employeeWecomUserId" autocomplete="off" placeholder="例如：WangMiao"><div class="wecom-userid-help">必须与企业微信管理后台的账号 UserID 完全一致，用于考勤数据映射；不是姓名、手机号或邮箱。</div>`;
+    const exemptRow = document.createElement('div');
+    exemptRow.className = 'form-row full';
+    exemptRow.innerHTML = `<label style="display:flex;align-items:center;gap:8px"><input id="employeeWecomAttendanceExempt" type="checkbox" style="width:auto">无需记录考勤</label><div class="wecom-userid-help">适用于老板、固定全职或其他不要求打卡的人员；同步时会永久跳过。</div>`;
     const statusRow = document.getElementById('employeeActive')?.closest('.form-row');
     form.insertBefore(divider, statusRow || null);
     form.insertBefore(row, statusRow || null);
+    form.insertBefore(exemptRow, statusRow || null);
   }
 
   function populateEmployeeField() {
@@ -55,6 +59,8 @@
     const id = document.getElementById('employeeId')?.value;
     const employee = (read().employees || []).find((item) => item.id === id);
     input.value = employee?.wecomUserId || '';
+    const exempt = document.getElementById('employeeWecomAttendanceExempt');
+    if (exempt) exempt.checked = Boolean(employee?.wecomAttendanceExempt);
   }
 
   function bindEmployeeField() {
@@ -69,10 +75,12 @@
       const id = document.getElementById('employeeId')?.value;
       const name = document.getElementById('employeeName')?.value.trim();
       const userId = document.getElementById('employeeWecomUserId')?.value.trim() || '';
+      const exempt = Boolean(document.getElementById('employeeWecomAttendanceExempt')?.checked);
       const state = read();
       const employee = (state.employees || []).find((item) => (id && item.id === id) || (!id && name && item.name === name));
       if (!employee) return;
-      employee.wecomUserId = userId;
+      employee.wecomUserId = exempt ? '' : userId;
+      employee.wecomAttendanceExempt = exempt;
       save(state);
     });
   }
@@ -158,6 +166,7 @@
   }
 
   function suggestedCandidate(employee, candidates, used) {
+    if (employee.wecomAttendanceExempt) return '__exempt__';
     const existing = String(employee.wecomUserId || '').trim();
     if (existing && candidates.some((item) => item.userId === existing)) return existing;
     const employeeName = normalizedName(employee.name);
@@ -183,16 +192,18 @@
     const suggestions = new Map();
     for (const employee of employees) {
       const value = suggestedCandidate(employee, candidates, used);
-      if (value) { suggestions.set(employee.id, value); used.add(value); }
+      if (value) { suggestions.set(employee.id, value); if (value !== '__exempt__') used.add(value); }
     }
-    const autoCount = suggestions.size;
+    const exemptCount = [...suggestions.values()].filter((value) => value === '__exempt__').length;
+    const autoCount = suggestions.size - exemptCount;
     modal.innerHTML = `<div class="wecom-card" role="dialog" aria-modal="true">
       <div class="wecom-head"><div><h2>自动匹配企业微信员工</h2><p>${esc(monthLabel(month))} · 已从打卡规则读取 ${candidates.length} 个账号</p></div><button class="wecom-close">×</button></div>
-      <div class="wecom-summary"><span class="wecom-chip">自动匹配 ${autoCount} 人</span><span class="wecom-chip ${autoCount < employees.length ? 'warn' : ''}">待确认 ${employees.length - autoCount} 人</span></div>
+      <div class="wecom-summary"><span class="wecom-chip">自动匹配 ${autoCount} 人</span><span class="wecom-chip">无需考勤 ${exemptCount} 人</span><span class="wecom-chip ${autoCount + exemptCount < employees.length ? 'warn' : ''}">待确认 ${employees.length - autoCount - exemptCount} 人</span></div>
       <div class="wecom-table-wrap"><table class="wecom-table"><thead><tr><th>工资员工</th><th>企业微信账号</th><th>当月数据</th></tr></thead><tbody>
         ${employees.map((employee) => {
           const selected = suggestions.get(employee.id) || '';
-          return `<tr><td><strong>${esc(employee.name)}</strong>${selected ? '<br><span class="wecom-auto">已按姓名自动匹配</span>' : ''}</td><td><select class="wecom-map-select" data-wecom-map="${esc(employee.id)}"><option value="">— 不导入该员工 —</option>${candidates.map((item) => `<option value="${esc(item.userId)}" ${item.userId === selected ? 'selected' : ''}>${esc(item.name || '未返回姓名')} · ${esc(item.userId)}</option>`).join('')}</select></td><td>${selected && candidates.find((item) => item.userId === selected)?.hasMonthData ? '已读取' : '确认后读取'}</td></tr>`;
+          const status = selected === '__exempt__' ? '永久跳过' : (selected && candidates.find((item) => item.userId === selected)?.hasMonthData ? '已读取' : '确认后读取');
+          return `<tr><td><strong>${esc(employee.name)}</strong>${selected && selected !== '__exempt__' ? '<br><span class="wecom-auto">已按姓名自动匹配</span>' : ''}</td><td><select class="wecom-map-select" data-wecom-map="${esc(employee.id)}"><option value="">— 本次不导入 —</option><option value="__exempt__" ${selected === '__exempt__' ? 'selected' : ''}>— 无需考勤（永久跳过）—</option>${candidates.map((item) => `<option value="${esc(item.userId)}" ${item.userId === selected ? 'selected' : ''}>${esc(item.name || '未返回姓名')} · ${esc(item.userId)}</option>`).join('')}</select></td><td>${status}</td></tr>`;
         }).join('')}
       </tbody></table></div>
       ${response.warnings?.length ? `<div class="wecom-note">部分规则提示：${esc(response.warnings.join('；'))}</div>` : ''}
@@ -205,23 +216,36 @@
     modal.querySelector('.wecom-confirm').onclick = async (event) => {
       const button = event.currentTarget;
       const selections = [...modal.querySelectorAll('[data-wecom-map]')].map((select) => ({ employeeId: select.dataset.wecomMap, userId: select.value }));
-      const chosen = selections.filter((item) => item.userId);
-      if (!chosen.length) return alert('请至少选择 1 名企业微信员工。');
+      const chosen = selections.filter((item) => item.userId && item.userId !== '__exempt__');
+      const exempt = selections.filter((item) => item.userId === '__exempt__');
+      if (!chosen.length && !exempt.length) return alert('请至少选择 1 名企业微信员工或设为“无需考勤”。');
       if (new Set(chosen.map((item) => item.userId)).size !== chosen.length) return alert('同一个企业微信账号不能映射给多名员工。');
       button.disabled = true;
       button.textContent = '正在读取考勤…';
       try {
         const latest = read();
         const selectedEmployees = [];
+        for (const item of exempt) {
+          const employee = (latest.employees || []).find((entry) => entry.id === item.employeeId);
+          if (!employee) continue;
+          employee.wecomUserId = '';
+          employee.wecomAttendanceExempt = true;
+        }
         for (const item of chosen) {
           const employee = (latest.employees || []).find((entry) => entry.id === item.employeeId);
           if (!employee) continue;
           employee.wecomUserId = item.userId;
+          employee.wecomAttendanceExempt = false;
           selectedEmployees.push(employee);
         }
         save(latest);
         try { await window.PayrollWorkspace?.saveNow?.({ force: true }); } catch (_) {}
         try { await window.PayrollCloud?.saveNow?.({ force: true }); } catch (_) {}
+        if (!selectedEmployees.length) {
+          closeModal();
+          alert('“无需考勤”已保存，以后同步将自动跳过。');
+          return;
+        }
         const data = await requestMonth(month, selectedEmployees, 8);
         renderPreview(latest, month, selectedEmployees, data);
       } catch (error) {
@@ -396,12 +420,14 @@
     const state = read();
     const month = state.currentMonth;
     const monthRows = state.months?.[month]?.rows || {};
-    const monthEmployees = (state.employees || []).filter((employee) => monthRows[employee.id]);
+    const allMonthEmployees = (state.employees || []).filter((employee) => monthRows[employee.id]);
+    const exemptEmployees = allMonthEmployees.filter((employee) => employee.wecomAttendanceExempt);
+    const monthEmployees = allMonthEmployees.filter((employee) => !employee.wecomAttendanceExempt);
     const mapped = monthEmployees.filter((employee) => String(employee.wecomUserId || '').trim());
     const unmapped = monthEmployees.filter((employee) => !String(employee.wecomUserId || '').trim());
     modal = document.createElement('div');
     modal.className = 'wecom-overlay';
-    modal.innerHTML = `<div class="wecom-card"><div class="wecom-head"><div><h2>正在读取企业微信考勤</h2><p>${esc(monthLabel(month))} · 已配置 ${mapped.length} 人，未配置 ${unmapped.length} 人</p></div><button class="wecom-close">×</button></div><div class="wecom-note">正在通过安全服务端连接企业微信，请稍候…</div></div>`;
+    modal.innerHTML = `<div class="wecom-card"><div class="wecom-head"><div><h2>正在读取企业微信考勤</h2><p>${esc(monthLabel(month))} · 已配置 ${mapped.length} 人，未配置 ${unmapped.length} 人，无需考勤 ${exemptEmployees.length} 人</p></div><button class="wecom-close">×</button></div><div class="wecom-note">正在通过安全服务端连接企业微信，请稍候…</div></div>`;
     document.body.appendChild(modal);
     modal.querySelector('.wecom-close').onclick = closeModal;
     try {
