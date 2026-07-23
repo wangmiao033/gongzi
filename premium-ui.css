@@ -636,3 +636,408 @@ html body .cloud-auth-note { color: #536a63; background: #f1f7f5; }
   body { background: #fff; }
   .panel, .card { box-shadow: none; }
 }
+
+/* Enterprise console refinement — inspired by modern cloud admin consoles. */
+:root {
+  --bg: #f5f6f8;
+  --surface: #fff;
+  --surface-2: #f7f8fa;
+  --surface-3: #eef1f5;
+  --text: #1d2129;
+  --muted: #6b7785;
+  --line: #e5e8ed;
+  --line-strong: #d9dde5;
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --primary-soft: #e8f0ff;
+  --primary-faint: #f3f7ff;
+  --success: #159570;
+  --success-soft: #e8f7f1;
+  --warning: #a56b0a;
+  --warning-soft: #fff6de;
+  --danger: #d14343;
+  --danger-soft: #fff0f0;
+  --shadow-sm: 0 1px 2px rgba(31, 35, 41, .035);
+  --shadow: 0 8px 22px rgba(31, 35, 41, .06);
+  --shadow-lg: 0 20px 56px rgba(15, 23, 42, .18);
+  --radius: 10px;
+  --radius-sm: 7px;
+}
+
+body {
+  color: var(--text);
+  background: #fff;
+  font-family: Inter, "SF Pro Text", "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+::selection { background: rgba(37, 99, 235, .82); }
+
+.secure-shell {
+  background:
+    radial-gradient(circle at 78% 10%, rgba(66, 133, 255, .12), transparent 24rem),
+    linear-gradient(145deg, #eef3fb, #f8faff 55%, #f3f6fb);
+}
+.secure-shell::before,
+.secure-shell::after { border-color: rgba(37, 99, 235, .08); }
+.secure-shell-card {
+  border-radius: 16px;
+  border-color: #fff;
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 18px 52px rgba(34, 71, 130, .13);
+}
+.secure-shell-mark {
+  border-radius: 11px;
+  background: linear-gradient(145deg, #4384ff, #1763ee);
+  box-shadow: 0 12px 26px rgba(37, 99, 235, .24);
+}
+
+.topbar {
+  min-height: 60px;
+  padding: 9px 20px;
+  gap: 18px;
+  color: #1d2129;
+  background: rgba(255, 255, 255, .98);
+  border-bottom: 1px solid #e5e8ed;
+  box-shadow: 0 2px 7px rgba(31, 35, 41, .055);
+}
+.brand { min-width: 260px; gap: 11px; }
+.brand-mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  color: #fff;
+  font-size: 18px;
+  background: linear-gradient(145deg, #4a8aff, #1f66ee);
+  border: 0;
+  box-shadow: 0 7px 16px rgba(37, 99, 235, .2);
+}
+.brand h1 { color: #1d2129; font-size: 16px; font-weight: 700; letter-spacing: .025em; }
+.brand p { margin-top: 2px; color: #7a8491; opacity: 1; font-size: 11px; }
+.status-dot { background: #22b583; box-shadow: 0 0 0 4px rgba(34, 181, 131, .12); }
+.topbar .cloud-sync-status { color: #56616f; background: transparent; }
+.topbar .cloud-sync-status:hover { background: #f3f5f8; }
+.topbar .cloud-team-button,
+.topbar .cloud-logout {
+  color: #3f4752 !important;
+  border-color: #dfe3e9 !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+  box-shadow: 0 1px 2px rgba(31, 35, 41, .03);
+}
+.topbar .cloud-team-button:hover,
+.topbar .cloud-logout:hover { color: var(--primary) !important; border-color: #9fbbf6 !important; background: #f5f8ff !important; transform: none; }
+.cloud-sync-user { color: #7d8794; }
+
+.layout { grid-template-columns: 224px minmax(0, 1fr); }
+.sidebar {
+  top: 60px;
+  height: calc(100vh - 60px);
+  padding: 17px 12px;
+  background: #f6f7f9;
+  border-right: 1px solid #e5e8ed;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.nav-title { margin: 4px 12px 10px; color: #8d96a3; letter-spacing: .12em; }
+.nav-btn {
+  min-height: 42px;
+  gap: 10px;
+  margin: 3px 0;
+  padding: 8px 11px;
+  color: #4e5969;
+  border-radius: 7px;
+  font-weight: 560;
+}
+.nav-btn::after { display: none; }
+.nav-btn:hover { color: #165dff; background: #eef3ff; transform: none; }
+.nav-btn.active {
+  color: #165dff;
+  background: #e8efff;
+  box-shadow: none;
+  font-weight: 660;
+}
+.nav-icon {
+  width: 26px;
+  height: 26px;
+  flex-basis: 26px;
+  color: #6b7785;
+  border-radius: 6px;
+  background: #e9ecf1;
+}
+.nav-btn.active .nav-icon { color: #fff; background: #3679f5; box-shadow: none; }
+.sidebar-note {
+  margin: 20px 5px 0;
+  padding: 13px;
+  color: #7b8490;
+  background: #fff;
+  border-color: #e1e5eb;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.main {
+  min-height: calc(100vh - 60px);
+  padding: 22px 28px 40px;
+  background: #fff;
+}
+.page-heading {
+  min-height: 72px;
+  margin: 0 -28px 18px;
+  padding: 2px 28px 18px;
+  gap: 22px;
+  border: 0;
+  border-bottom: 1px solid #e8ebf0;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.page-heading h2 { color: #1d2129; font-size: 23px; font-weight: 690; letter-spacing: -.02em; }
+.page-heading p { margin-top: 6px; color: #7b8490; }
+.field-inline { color: #657080; }
+
+input, select, textarea {
+  border-color: #d9dde5;
+  border-radius: 6px;
+  color: #1d2129;
+  box-shadow: none;
+}
+input:hover, select:hover, textarea:hover { border-color: #94aff0; }
+input:focus, select:focus, textarea:focus { border-color: #3370ff; box-shadow: 0 0 0 3px rgba(51, 112, 255, .1); }
+
+.btn {
+  min-height: 36px;
+  padding: 7px 13px;
+  color: #4e5969;
+  border-color: #dfe3e9;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(31, 35, 41, .035);
+  font-weight: 620;
+}
+.btn:hover { color: #165dff; border-color: #9fbbf6; background: #f5f8ff; transform: none; box-shadow: none; }
+.btn.primary,
+#createPayrollMonthBtn {
+  color: #fff;
+  border-color: #2468f2;
+  background: #2468f2;
+  box-shadow: none;
+}
+.btn.primary:hover,
+#createPayrollMonthBtn:hover { color: #fff; border-color: #1555d8; background: #1555d8; box-shadow: none; }
+.btn.success { color: #fff; border-color: #168b69; background: #168b69; box-shadow: none; }
+.btn.success:hover { color: #fff; border-color: #0f7256; background: #0f7256; }
+
+.archive-controls {
+  min-height: 58px;
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  border-color: #e4e8ee;
+  border-radius: 8px;
+  background: #f7f8fa;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.archive-controls .field-inline {
+  min-height: 36px;
+  padding: 2px 4px 2px 9px;
+  border-color: #e0e4ea;
+  border-radius: 6px;
+  background: #fff;
+}
+.archive-controls select { border-radius: 4px; }
+.archive-status { border-radius: 4px; }
+.archive-status.draft { color: #a26a00; background: #fff3d8; }
+.archive-status.pending { color: #a04f08; background: #ffead8; }
+.archive-status.archived { color: #117552; background: #e6f5ee; }
+.archive-status.paid { background: #168b69; }
+.company-filter-hint,
+.pay-date-chip,
+.month-integrity-chip {
+  min-height: 28px;
+  border-color: #dce5f8;
+  border-radius: 4px !important;
+  color: #456284 !important;
+  background: #eef4ff !important;
+}
+
+.cards { gap: 14px; margin-bottom: 16px; }
+.card {
+  min-height: 128px;
+  padding: 17px 18px;
+  border-color: #e1e5eb;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: none;
+}
+.card:hover { border-color: #cbd3df; transform: none; box-shadow: 0 5px 16px rgba(31, 35, 41, .055); }
+.metric-card::before { inset: 0 0 auto; width: 100%; height: 2px; background: #93b4fa; }
+.metric-card::after { display: none; }
+.metric-card.gross::before { background: #5189fb; }
+.metric-card.deduction::before { background: #e6ad42; }
+.metric-card.net::before { background: #35a986; }
+.metric-card.net,
+.metric-card.gross,
+.metric-card.deduction { border-color: #e1e5eb; background: #fff; }
+.metric-label { color: #7b8490; font-size: 12px; font-weight: 600; }
+.metric-label > span:last-child,
+.gross .metric-label > span:last-child,
+.deduction .metric-label > span:last-child,
+.net .metric-label > span:last-child {
+  width: auto;
+  height: auto;
+  color: #8d96a3;
+  background: transparent;
+}
+.metric-value { margin-top: 13px; color: #1d2129; font-size: 27px; font-weight: 680; }
+.metric-note { margin-top: 9px; color: #8a939f; }
+
+.panel {
+  margin-bottom: 16px;
+  border-color: #e1e5eb;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: none;
+}
+.panel-header { padding: 15px 18px; border-bottom-color: #e8ebf0; background: #fff; }
+.panel-title { color: #1d2129; font-size: 16px; font-weight: 660; }
+.panel-subtitle { color: #7b8490; }
+.panel-body { padding: 18px; }
+.mode-pill { color: #165dff; border-color: #d7e3ff; border-radius: 4px; background: #edf3ff; }
+.legend { color: #7b8490; }
+.swatch { border-radius: 2px; }
+
+.table-wrap { scrollbar-color: #bdc4ce #f2f3f5; }
+.table-wrap::-webkit-scrollbar-track { background: #f2f3f5; }
+.table-wrap::-webkit-scrollbar-thumb { border-color: #f2f3f5; background: #bdc4ce; }
+th, td { height: 40px; border-color: #e6e9ee; }
+th:first-child, td:first-child,
+thead tr:first-child th { border-color: #e6e9ee; }
+th,
+th.group-attendance,
+th.group-income,
+th.group-deduction,
+th.group-result {
+  color: #4e5969;
+  background: #f5f6f8;
+  font-size: 11px;
+  font-weight: 660;
+}
+th.group-attendance { color: #315f9c; background: #f1f5fb; }
+th.group-income { color: #35705c; background: #f1f7f4; }
+th.group-deduction { color: #8a6225; background: #faf6ed; }
+th.group-result { color: #545f86; background: #f4f4f9; }
+td { color: #3d4651; }
+tbody tr:nth-child(even) td { background: #fbfcfd; }
+tbody tr:hover td { background: #f4f7fd; }
+tfoot td { color: #315b8b; background: #eef4ff; }
+.sticky-name { box-shadow: 5px 0 10px rgba(31, 35, 41, .025); }
+th.sticky-name { color: #315f9c; background: #eaf1fb; }
+td.computed { color: #36414d; background: #f7f8fa; }
+td.money-positive { color: #16805e; }
+td.money-result { color: #315f9c; }
+.cell-input,
+.salary-input,
+.wecom-field-input { min-height: 32px; border-color: #dce1e8; border-radius: 5px; }
+.icon-btn { width: 29px; height: 29px; border-radius: 5px; }
+.icon-btn:hover { color: #165dff; border-color: #b7caf4; background: #eef4ff; }
+
+.quick-tip,
+.rate-note {
+  color: #52657c;
+  border-color: #dce5f5;
+  border-radius: 7px;
+  background: #f3f7ff;
+}
+.rate-note { color: #765c31; border-color: #eee1c7; background: #fffaf0; }
+.setting-block { border-color: #e1e5eb; border-radius: 9px; box-shadow: none; }
+
+.modal-backdrop,
+html body .wecom-overlay,
+html body .new-month-overlay,
+html body .payroll-team-overlay,
+html body .cloud-auth-overlay {
+  background: rgba(29, 33, 41, .52) !important;
+  backdrop-filter: blur(5px) !important;
+}
+.modal,
+html body .wecom-card,
+html body .new-month-card,
+html body .payroll-team-card,
+html body .cloud-auth-card,
+html body .payroll-recovery-card {
+  border-color: #e3e6eb !important;
+  border-radius: 11px !important;
+  box-shadow: 0 20px 56px rgba(31, 35, 41, .18) !important;
+}
+html body .wecom-close,
+html body .new-month-close,
+html body .payroll-team-close { border-radius: 6px; background: #f2f3f5; }
+html body .wecom-chip { color: #35608f; border-color: #dce6f8; border-radius: 4px; background: #eef4ff; }
+html body .wecom-chip.warn { color: #94600b; border-color: #eedebc; background: #fff7e6; }
+html body .wecom-table-wrap,
+html body .new-month-roster,
+html body .payroll-team-section { border-color: #e1e5eb; border-radius: 8px; }
+html body .wecom-confirm,
+html body .new-month-submit,
+html body .payroll-team-primary,
+html body .cloud-auth-primary {
+  border-radius: 6px !important;
+  background: #2468f2 !important;
+  box-shadow: none;
+}
+html body .cloud-auth-logo { border-radius: 10px; background: linear-gradient(145deg, #4a8aff, #1f66ee); box-shadow: 0 10px 24px rgba(37, 99, 235, .22); }
+html body .cloud-auth-note { color: #5d6d80; background: #f3f6fb; }
+
+.archive-record { border-color: #e1e5eb; border-radius: 8px; }
+.archive-record-head { background: #f7f8fa; }
+.payment-record { color: #176b52; background: #ebf7f2; border-color: #d7ebe3; }
+
+@media (min-width: 1281px) {
+  .page-heading { align-items: center; flex-direction: row; }
+  .page-heading > .toolbar { width: auto; justify-content: flex-end; }
+}
+
+@media (max-width: 760px) {
+  body { background: #fff; }
+  .topbar { min-height: 58px; padding: 8px 12px; }
+  .brand { min-width: 0; }
+  .brand p,
+  .topbar .cloud-sync-label,
+  .topbar .cloud-sync-user,
+  .topbar .cloud-team-button { display: none; }
+  .topbar > div:last-child { max-width: 110px; overflow: hidden; }
+  .brand-mark { width: 38px; height: 38px; border-radius: 9px; }
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .sidebar {
+    position: sticky;
+    top: 58px;
+    height: auto;
+    z-index: 40;
+    padding: 7px;
+    display: flex;
+    gap: 3px;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid #e5e8ed;
+    background: #f7f8fa;
+  }
+  .nav-title,
+  .sidebar-note { display: none; }
+  .nav-btn { min-width: max-content; margin: 0 2px; }
+  .main { padding-top: 14px; background: #fff; }
+  .page-heading { margin: 0 0 14px; padding: 14px; border: 1px solid #e4e8ee; border-radius: 9px; }
+  .page-heading .toolbar { gap: 8px; }
+  .archive-controls { border-radius: 8px; }
+  .card { min-height: 124px; border-radius: 8px; }
+  .panel { border-radius: 8px; }
+  html body .wecom-card,
+  html body .new-month-card,
+  html body .payroll-team-card,
+  html body .cloud-auth-card { border-radius: 10px !important; }
+}
+
+@media print {
+  .topbar, .sidebar, .page-heading, .cards, .panel-header, .settings-grid, .no-print, .toast, .modal-backdrop { display: none !important; }
+  .main { padding: 0; }
+}
